@@ -1,0 +1,191 @@
+-- Sales Team AI - Database Schema
+-- Run this in the Supabase SQL Editor to set up your database
+
+-- ============================================================
+-- 1. PROFILES (extends auth.users)
+-- ============================================================
+
+create table if not exists public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  email text not null,
+  full_name text,
+  company_name text,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+alter table public.profiles enable row level security;
+
+create policy "Users can view own profile"
+  on public.profiles for select
+  using (auth.uid() = id);
+
+create policy "Users can update own profile"
+  on public.profiles for update
+  using (auth.uid() = id);
+
+create policy "Users can insert own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id);
+
+-- Auto-create profile on signup
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, full_name)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', '')
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- ============================================================
+-- 2. ICPS (Ideal Customer Profiles)
+-- ============================================================
+
+create table if not exists public.icps (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  name text not null,
+  description text,
+  industry text[] default '{}',
+  company_size_min integer,
+  company_size_max integer,
+  revenue_min numeric,
+  revenue_max numeric,
+  job_titles text[] default '{}',
+  locations text[] default '{}',
+  technologies text[] default '{}',
+  keywords text[] default '{}',
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+alter table public.icps enable row level security;
+
+create policy "Users can view own ICPs"
+  on public.icps for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own ICPs"
+  on public.icps for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own ICPs"
+  on public.icps for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own ICPs"
+  on public.icps for delete
+  using (auth.uid() = user_id);
+
+-- ============================================================
+-- 3. LEADS
+-- ============================================================
+
+create type public.lead_status as enum ('new', 'contacted', 'qualified', 'unqualified', 'converted');
+create type public.lead_source as enum ('ai_generated', 'manual', 'imported');
+
+create table if not exists public.leads (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  icp_id uuid references public.icps(id) on delete set null,
+  company_name text not null,
+  company_website text,
+  company_industry text,
+  company_size text,
+  company_revenue text,
+  company_location text,
+  company_description text,
+  contact_name text,
+  contact_title text,
+  contact_email text,
+  contact_phone text,
+  contact_linkedin text,
+  ai_score integer check (ai_score >= 0 and ai_score <= 100),
+  ai_score_reasons jsonb,
+  status public.lead_status default 'new' not null,
+  source public.lead_source default 'manual' not null,
+  notes text,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+alter table public.leads enable row level security;
+
+create policy "Users can view own leads"
+  on public.leads for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own leads"
+  on public.leads for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own leads"
+  on public.leads for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own leads"
+  on public.leads for delete
+  using (auth.uid() = user_id);
+
+-- Index for faster queries
+create index if not exists idx_leads_user_id on public.leads(user_id);
+create index if not exists idx_leads_icp_id on public.leads(icp_id);
+create index if not exists idx_leads_status on public.leads(status);
+create index if not exists idx_leads_ai_score on public.leads(ai_score desc);
+
+-- ============================================================
+-- 4. LEAD ACTIVITIES
+-- ============================================================
+
+create table if not exists public.lead_activities (
+  id uuid default gen_random_uuid() primary key,
+  lead_id uuid references public.leads(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  action text not null,
+  details jsonb,
+  created_at timestamptz default now() not null
+);
+
+alter table public.lead_activities enable row level security;
+
+create policy "Users can view own lead activities"
+  on public.lead_activities for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own lead activities"
+  on public.lead_activities for insert
+  with check (auth.uid() = user_id);
+
+-- ============================================================
+-- 5. AUTO-UPDATE updated_at TRIGGER
+-- ============================================================
+
+create or replace function public.update_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger update_profiles_updated_at
+  before update on public.profiles
+  for each row execute procedure public.update_updated_at();
+
+create trigger update_icps_updated_at
+  before update on public.icps
+  for each row execute procedure public.update_updated_at();
+
+create trigger update_leads_updated_at
+  before update on public.leads
+  for each row execute procedure public.update_updated_at();
