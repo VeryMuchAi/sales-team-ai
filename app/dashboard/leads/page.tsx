@@ -46,8 +46,8 @@ export default function LeadsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Leads</h1>
-        <Button variant="outline" onClick={handleExport}>
+        <h1 className="text-2xl font-extrabold text-[#363536]">Leads</h1>
+        <Button variant="outline" onClick={handleExport} className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]">
           <Download className="mr-2 h-4 w-4" />
           Export CSV
         </Button>

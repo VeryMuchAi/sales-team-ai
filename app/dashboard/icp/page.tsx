@@ -51,8 +51,8 @@ export default function ICPListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Ideal Customer Profiles</h1>
-        <Button onClick={() => router.push('/dashboard/icp/new')}>
+        <h1 className="text-2xl font-extrabold text-[#363536]">Ideal Customer Profiles</h1>
+        <Button onClick={() => router.push('/dashboard/icp/new')} className="bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A]">
           <Plus className="mr-2 h-4 w-4" />
           New ICP
         </Button>
@@ -65,9 +65,9 @@ export default function ICPListPage() {
           ))}
         </div>
       ) : icps.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-12 text-center">
-          <p className="text-muted-foreground">No ICPs yet. Create one to start generating leads.</p>
-          <Button className="mt-4" onClick={() => router.push('/dashboard/icp/new')}>
+        <div className="rounded-xl border border-dashed border-[#E5E5E5] bg-white p-12 text-center">
+          <p className="text-[#6B6B6B]">Sin ICPs todavía. Crea uno para empezar a generar leads.</p>
+          <Button className="mt-4 bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A]" onClick={() => router.push('/dashboard/icp/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Create Your First ICP
           </Button>

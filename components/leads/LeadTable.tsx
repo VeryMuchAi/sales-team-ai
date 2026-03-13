@@ -21,7 +21,7 @@ export function LeadTable({ leads }: LeadTableProps) {
   const router = useRouter();
 
   return (
-    <div className="rounded-lg border border-border">
+    <div className="rounded-xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -36,7 +36,7 @@ export function LeadTable({ leads }: LeadTableProps) {
         <TableBody>
           {leads.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={6} className="h-24 text-center text-[#6B6B6B]">
                 No leads found.
               </TableCell>
             </TableRow>
@@ -50,13 +50,13 @@ export function LeadTable({ leads }: LeadTableProps) {
                 <TableCell>
                   <div>
                     <p className="font-medium">{lead.company_name}</p>
-                    <p className="text-xs text-muted-foreground">{lead.company_location || ''}</p>
+                    <p className="text-xs text-[#6B6B6B]">{lead.company_location || ''}</p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div>
                     <p className="text-sm">{lead.contact_name || '--'}</p>
-                    <p className="text-xs text-muted-foreground">{lead.contact_title || ''}</p>
+                    <p className="text-xs text-[#6B6B6B]">{lead.contact_title || ''}</p>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm">{lead.company_industry || '--'}</TableCell>
@@ -66,7 +66,7 @@ export function LeadTable({ leads }: LeadTableProps) {
                 <TableCell>
                   <LeadStatusBadge status={lead.status} />
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="text-xs text-[#6B6B6B]">
                   {lead.source === 'ai_generated' ? 'AI' : lead.source}
                 </TableCell>
               </TableRow>

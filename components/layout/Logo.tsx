@@ -1,8 +1,15 @@
+import Image from 'next/image';
+
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={className}>
-      <span className="font-bold">Sales Team</span>{' '}
-      <span className="font-bold text-primary">AI</span>
-    </span>
+    <Image
+      src="/logo.png"
+      alt="Verymuch.Ai"
+      width={140}
+      height={36}
+      className={`h-8 w-auto object-contain bg-transparent ${className ?? ''}`}
+      style={{ background: 'transparent' }}
+      priority
+    />
   );
 }

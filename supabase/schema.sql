@@ -189,3 +189,97 @@ create trigger update_icps_updated_at
 create trigger update_leads_updated_at
   before update on public.leads
   for each row execute procedure public.update_updated_at();
+
+-- ============================================================
+-- 6. WHITELISTED EMAILS (for team access control)
+-- ============================================================
+
+create table if not exists public.whitelisted_emails (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  created_at timestamptz default now() not null
+);
+
+alter table public.whitelisted_emails enable row level security;
+
+-- Only allow reading whitelisted emails (during signup check)
+create policy "Anyone can read whitelisted emails"
+  on public.whitelisted_emails for select
+  to authenticated
+  using (true);
+
+-- ============================================================
+-- 7. PROSPECTS (for AI agent analysis pipeline)
+-- ============================================================
+
+create table if not exists public.prospects (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  company_name text not null,
+  website_url text,
+  contact_email text,
+  contact_name text,
+  contact_title text,
+  linkedin_url text,
+  notes text,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+alter table public.prospects enable row level security;
+
+create policy "Users can view own prospects"
+  on public.prospects for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own prospects"
+  on public.prospects for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own prospects"
+  on public.prospects for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own prospects"
+  on public.prospects for delete
+  using (auth.uid() = user_id);
+
+create index if not exists idx_prospects_user_id on public.prospects(user_id);
+
+create trigger update_prospects_updated_at
+  before update on public.prospects
+  for each row execute procedure public.update_updated_at();
+
+-- ============================================================
+-- 8. AGENT RESULTS (AI pipeline outputs)
+-- ============================================================
+
+create type public.prospect_priority as enum ('HOT', 'WARM', 'COLD');
+
+create table if not exists public.agent_results (
+  id uuid default gen_random_uuid() primary key,
+  prospect_id uuid references public.prospects(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  research_output text,
+  analysis_output text,
+  outreach_output text,
+  coordinator_output text,
+  icp_score integer check (icp_score >= 1 and icp_score <= 10),
+  timing_score integer check (timing_score >= 1 and timing_score <= 10),
+  priority public.prospect_priority,
+  created_at timestamptz default now() not null
+);
+
+alter table public.agent_results enable row level security;
+
+create policy "Users can view own agent results"
+  on public.agent_results for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create own agent results"
+  on public.agent_results for insert
+  with check (auth.uid() = user_id);
+
+create index if not exists idx_agent_results_prospect_id on public.agent_results(prospect_id);
+create index if not exists idx_agent_results_user_id on public.agent_results(user_id);
+create index if not exists idx_agent_results_priority on public.agent_results(priority);

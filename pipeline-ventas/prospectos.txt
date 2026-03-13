@@ -1,0 +1,20 @@
+Empresa: Factorial
+Web: https://factorialhr.com
+LinkedIn: https://linkedin.com/company/factorial
+Contacto: Jordi Romero, CEO
+Notas: Software de RRHH, Serie C, creciendo rápido en España y LATAM
+
+---
+
+Empresa: Platzi
+Web: https://platzi.com
+LinkedIn: https://linkedin.com/company/platzi
+Contacto: Freddy Vega, CEO
+Notas: Plataforma de educación online, fuerte en LATAM
+
+---
+
+Empresa: GestCAE SL
+Web: https://gestcae.com
+Contacto: afranco@gestcae.com
+Notas: Especialistas en certificados de eficiencia energética (CAEs) en España, sede en Griñón (Madrid), +10 años de experiencia. Reunión programada para 18 de febrero de 2026.

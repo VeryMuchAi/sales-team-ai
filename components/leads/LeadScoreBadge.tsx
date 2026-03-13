@@ -1,19 +1,19 @@
 import { cn } from '@/lib/utils';
 
 export function LeadScoreBadge({ score }: { score: number | null }) {
-  if (score === null) return <span className="text-xs text-muted-foreground">--</span>;
+  if (score === null) return <span className="text-xs text-[#6B6B6B]">--</span>;
 
-  const color =
+  const style =
     score >= 80
-      ? 'bg-green-500/20 text-green-400'
+      ? 'bg-[#D6EDD8] text-[#3D7A4A]'
       : score >= 60
-        ? 'bg-yellow-500/20 text-yellow-400'
+        ? 'bg-[#FDE7D0] text-[#C4621A]'
         : score >= 40
-          ? 'bg-orange-500/20 text-orange-400'
-          : 'bg-red-500/20 text-red-400';
+          ? 'bg-[#DDEAEE] text-[#4A8FA8]'
+          : 'bg-[#F0EFED] text-[#6B6B6B]';
 
   return (
-    <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold', color)}>
+    <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold', style)}>
       {score}
     </span>
   );

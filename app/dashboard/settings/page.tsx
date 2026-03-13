@@ -59,7 +59,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-extrabold text-[#363536]">Configuración</h1>
 
       <Card className="max-w-lg">
         <CardHeader>
@@ -87,8 +87,8 @@ export default function SettingsPage() {
                 onChange={(e) => setCompanyName(e.target.value)}
               />
             </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={loading} className="bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A] font-medium">
+              {loading ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           </CardContent>
         </form>

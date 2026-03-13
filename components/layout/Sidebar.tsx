@@ -2,28 +2,29 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Target, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Target, Settings, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/prospectos', label: 'Prospectos AI', icon: Sparkles },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
   { href: '/dashboard/icp', label: 'ICP', icon: Target },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard/settings', label: 'Configuración', icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-border bg-sidebar md:flex">
-      <div className="flex h-16 items-center border-b border-border px-6">
-        <Link href="/dashboard">
-          <Logo className="text-xl" />
+    <aside className="hidden w-64 flex-col border-r border-[#E5E5E5] bg-white md:flex">
+      <div className="flex h-16 items-center border-b border-[#E5E5E5] px-6">
+        <Link href="/dashboard" className="bg-transparent">
+          <Logo />
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-0.5 p-4">
         {navItems.map((item) => {
           const isActive =
             item.href === '/dashboard'
@@ -34,18 +35,26 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  ? 'bg-[#D6EDD8] text-[#363536]'
+                  : 'text-[#6B6B6B] hover:bg-[#F0EFED] hover:text-[#363536]'
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon
+                className={cn(
+                  'h-4 w-4 shrink-0',
+                  isActive ? 'text-[#5BA66B]' : 'text-[#6B6B6B]'
+                )}
+              />
               {item.label}
             </Link>
           );
         })}
       </nav>
+      <div className="border-t border-[#E5E5E5] p-4">
+        <p className="text-xs text-[#6B6B6B]">Verymuch.Ai © 2026</p>
+      </div>
     </aside>
   );
 }
