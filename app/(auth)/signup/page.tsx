@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
+import { RESTRICTED_MSG } from '@/lib/auth/whitelist';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +23,16 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
+    const { data: allowed, error: rpcError } = await supabase.rpc('is_email_whitelisted', {
+      check_email: email.trim(),
+    });
+
+    if (rpcError || allowed !== true) {
+      toast.error(RESTRICTED_MSG);
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,

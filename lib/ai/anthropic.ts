@@ -8,4 +8,6 @@ export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-export const MODEL = 'claude-opus-4-20250514';
+/** Default: Sonnet 4 — override with ANTHROPIC_MODEL in .env */
+export const MODEL =
+  process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';

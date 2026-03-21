@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
+import { RESTRICTED_MSG } from '@/lib/auth/whitelist';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'restricted') {
+      toast.error(RESTRICTED_MSG);
+      window.history.replaceState({}, '', '/login');
+    }
+  }, []);
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -25,6 +34,17 @@ export default function LoginPage() {
 
     if (error) {
       toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+
+    const { data: allowed, error: rpcError } = await supabase.rpc('is_email_whitelisted', {
+      check_email: email.trim(),
+    });
+
+    if (rpcError || allowed !== true) {
+      await supabase.auth.signOut();
+      toast.error(RESTRICTED_MSG);
       setLoading(false);
       return;
     }

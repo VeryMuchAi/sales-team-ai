@@ -4,66 +4,50 @@ import { runProposalGenerator } from '@/lib/agents/proposal-generator';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-/**
- * Proposal Generator Agent (legacy path: /api/agents/outreach).
- * Requires Prospect Intel + Pre-Call Brief + Call Analysis.
- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      research,
       prospect_intel_json,
-      analysis,
       pre_call_brief,
       call_analysis,
       company_name,
       contact_name,
       language,
+      additional_context,
     } = body as Record<string, string | undefined>;
 
-    const intel = prospect_intel_json ?? research;
-    const brief = pre_call_brief ?? analysis;
-    const call = call_analysis;
-
-    if (!intel?.trim() || !brief?.trim() || !company_name?.trim()) {
+    if (
+      !prospect_intel_json?.trim() ||
+      !pre_call_brief?.trim() ||
+      !call_analysis?.trim() ||
+      !company_name?.trim()
+    ) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            'prospect_intel_json (or research), pre_call_brief (or analysis), and company_name are required',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!call?.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'call_analysis is required for proposal generation. Run Call Analyzer on your discovery transcript first.',
+          error: 'prospect_intel_json, pre_call_brief, call_analysis, and company_name are required',
         },
         { status: 400 }
       );
     }
 
     const proposal = await runProposalGenerator({
-      prospect_intel_json: intel,
-      pre_call_brief: brief,
-      call_analysis: call,
+      prospect_intel_json,
+      pre_call_brief,
+      call_analysis,
       company_name,
       contact_name,
       language: language === 'en' ? 'en' : 'es',
+      additional_context,
     });
 
     return NextResponse.json({
       success: true,
-      outreach: proposal,
       proposal,
     });
   } catch (error) {
-    console.error('Proposal Generator (outreach alias) error:', error);
+    console.error('Proposal Generator agent error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Proposal generation failed';
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }

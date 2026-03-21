@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { isEmailWhitelisted } from '@/lib/auth/whitelist';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -32,6 +33,16 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.email) {
+        const allowed = await isEmailWhitelisted(supabase, user.email);
+        if (!allowed) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/login?error=restricted`);
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

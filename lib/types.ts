@@ -23,6 +23,7 @@ export interface Lead {
   id: string;
   user_id: string;
   icp_id: string | null;
+  prospect_id: string | null;
   company_name: string;
   company_website: string | null;
   company_industry: string | null;
@@ -36,7 +37,8 @@ export interface Lead {
   contact_phone: string | null;
   contact_linkedin: string | null;
   ai_score: number | null;
-  ai_score_reasons: ScoreReason[] | null;
+  /** Structured reasons from AI (flexible JSON) */
+  ai_score_reasons: ScoreReason[] | Record<string, unknown> | null;
   status: LeadStatus;
   source: LeadSource;
   notes: string | null;

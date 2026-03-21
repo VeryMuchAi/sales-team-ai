@@ -63,7 +63,7 @@ export default function LeadsPage() {
       {loading ? (
         <Skeleton className="h-64" />
       ) : (
-        <LeadTable leads={leads} />
+        <LeadTable leads={leads} onLeadDeleted={loadLeads} />
       )}
     </div>
   );

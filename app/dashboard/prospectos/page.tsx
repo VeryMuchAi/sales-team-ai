@@ -9,33 +9,45 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Search, Sparkles, Copy, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Search, Sparkles, Copy, ArrowLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ProspectIntelCards } from '@/components/prospects/ProspectIntelCards';
+import { MarkdownBlock } from '@/components/prospects/MarkdownBlock';
+import { StageStepper } from '@/components/prospects/StageStepper';
 
 interface AnalysisResult {
   prospect_id: string;
-  result_id: string;
+  result_id?: string;
   research: string;
+  prospect_intel?: Record<string, unknown> | null;
   analysis: string;
-  outreach: string;
+  pre_call_brief?: string;
+  outreach: string | null;
   coordinator: string;
   icp_score: number | null;
   timing_score: number | null;
+  interest_score?: number | null;
+  prospect_requested_call?: 'yes' | 'no' | 'unknown' | null;
   priority: 'HOT' | 'WARM' | 'COLD' | null;
 }
 
-type AnalysisStep = 'idle' | 'research' | 'analysis' | 'outreach' | 'coordinator' | 'complete';
+type AnalysisStep = 'idle' | 'intel' | 'brief' | 'coordinator' | 'complete';
 
 export default function ProspectosPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     company_name: '',
     website_url: '',
+    website_text: '',
     contact_email: '',
     contact_name: '',
     contact_title: '',
     linkedin_url: '',
+    linkedin_text: '',
     notes: '',
+    additional_context: '',
+    prospect_requested_call: false,
   });
 
   const [analyzing, setAnalyzing] = useState(false);
@@ -47,18 +59,17 @@ export default function ProspectosPage() {
   };
 
   const getStepProgress = (step: AnalysisStep): number => {
-    const steps = { idle: 0, research: 25, analysis: 50, outreach: 75, coordinator: 90, complete: 100 };
+    const steps = { idle: 0, intel: 30, brief: 60, coordinator: 90, complete: 100 };
     return steps[step] || 0;
   };
 
   const getStepLabel = (step: AnalysisStep): string => {
     const labels = {
       idle: 'Listo para analizar',
-      research: '🔍 Investigando empresa...',
-      analysis: '📊 Analizando fit estratégico...',
-      outreach: '✉️ Generando mensajes personalizados...',
-      coordinator: '📋 Compilando plan de acción...',
-      complete: '✅ Análisis completo',
+      intel: '🔍 Prospect Intel (ICP + empresa)...',
+      brief: '📋 Pre-Call Brief...',
+      coordinator: '🧭 Coordinador (siguientes pasos)...',
+      complete: '✅ Pipeline listo',
     };
     return labels[step] || '';
   };
@@ -71,11 +82,10 @@ export default function ProspectosPage() {
 
     setAnalyzing(true);
     setResult(null);
-    setCurrentStep('research');
+    setCurrentStep('intel');
 
     try {
-      // Simulate step progression for UX
-      const stepSequence: AnalysisStep[] = ['research', 'analysis', 'outreach', 'coordinator'];
+      const stepSequence: AnalysisStep[] = ['intel', 'brief', 'coordinator'];
       let stepIndex = 0;
 
       const progressInterval = setInterval(() => {
@@ -83,7 +93,7 @@ export default function ProspectosPage() {
           stepIndex++;
           setCurrentStep(stepSequence[stepIndex]);
         }
-      }, 5000); // Update UI every 5 seconds
+      }, 6000);
 
       const response = await fetch('/api/prospects/analyze', {
         method: 'POST',
@@ -125,11 +135,15 @@ export default function ProspectosPage() {
     setFormData({
       company_name: '',
       website_url: '',
+      website_text: '',
       contact_email: '',
       contact_name: '',
       contact_title: '',
       linkedin_url: '',
+      linkedin_text: '',
       notes: '',
+      additional_context: '',
+      prospect_requested_call: false,
     });
     setResult(null);
     setCurrentStep('idle');
@@ -154,7 +168,7 @@ export default function ProspectosPage() {
         <div>
           <h1 className="text-2xl font-extrabold text-[#363536]">Análisis de Prospectos</h1>
           <p className="text-sm text-[#6B6B6B]">
-            Análisis inteligente con 4 agentes AI trabajando en secuencia
+            Flujo Verymuch.ai: Prospect Intel → Pre-Call Brief → Coordinador (propuesta tras transcripción vía API)
           </p>
         </div>
         {result && (
@@ -246,16 +260,74 @@ export default function ProspectosPage() {
               </div>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="linkedin_text">Perfil LinkedIn (texto pegado, opcional)</Label>
+                <Textarea
+                  id="linkedin_text"
+                  value={formData.linkedin_text}
+                  onChange={(e) => handleInputChange('linkedin_text', e.target.value)}
+                  placeholder="Pega aquí el resumen del perfil si no hay URL pública..."
+                  rows={3}
+                  disabled={analyzing}
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="website_text">Website (texto pegado, opcional)</Label>
+                <Textarea
+                  id="website_text"
+                  value={formData.website_text}
+                  onChange={(e) => handleInputChange('website_text', e.target.value)}
+                  placeholder="Pega contenido clave del sitio si el fetch automático no es suficiente..."
+                  rows={3}
+                  disabled={analyzing}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="notes">Notas / Contexto Adicional</Label>
+              <Label htmlFor="additional_context">Contexto adicional</Label>
+              <Textarea
+                id="additional_context"
+                value={formData.additional_context}
+                onChange={(e) => handleInputChange('additional_context', e.target.value)}
+                placeholder='Ej: "Este prospecto escribió directamente a Jorge pidiendo reunión", "Viene referido por cliente X", "Completó el ARRI con score alto", "Ya tuvimos una llamada informal"...'
+                rows={4}
+                disabled={analyzing}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notas</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Cualquier información adicional que pueda ayudar al análisis..."
+                placeholder="Otras notas internas (opcional)..."
                 rows={3}
                 disabled={analyzing}
               />
+            </div>
+
+            <div className="flex items-start gap-3 rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
+              <Checkbox
+                id="prospect_requested_call"
+                checked={formData.prospect_requested_call}
+                onCheckedChange={(v) =>
+                  setFormData((prev) => ({ ...prev, prospect_requested_call: v === true }))
+                }
+                disabled={analyzing}
+                className="mt-0.5 border-[#AAD4AE] data-[state=checked]:bg-[#AAD4AE] data-[state=checked]:text-[#363536]"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="prospect_requested_call" className="cursor-pointer text-[#363536]">
+                  El prospecto solicitó la reunión / llamada con nosotros
+                </Label>
+                <p className="text-xs text-[#6B6B6B]">
+                  Marca esto si ellos pidieron la cita (no fue cold outbound). El agente lo usará para medir interés y si
+                  solicitaron la llamada.
+                </p>
+              </div>
             </div>
 
             {analyzing && (
@@ -293,12 +365,13 @@ export default function ProspectosPage() {
         </Card>
       ) : (
         <div className="space-y-6">
+          <StageStepper stage="brief" />
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-2xl">{formData.company_name}</CardTitle>
-                  <CardDescription>Análisis completado</CardDescription>
+                  <CardDescription>Análisis completado — lead sincronizado con la sección Leads</CardDescription>
                 </div>
                 <div className="flex gap-2">
                   {result.priority && (
@@ -310,19 +383,37 @@ export default function ProspectosPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {result.icp_score !== null && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {result.icp_score !== null && result.icp_score !== undefined && (
                   <div className="rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
                     <p className="text-xs text-[#6B6B6B]">ICP Score</p>
                     <p className="text-2xl font-extrabold text-[#363536]">{result.icp_score}/10</p>
                   </div>
                 )}
-                {result.timing_score !== null && (
+                {result.timing_score !== null && result.timing_score !== undefined && (
                   <div className="rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
                     <p className="text-xs text-[#6B6B6B]">Timing Score</p>
                     <p className="text-2xl font-extrabold text-[#363536]">{result.timing_score}/10</p>
                   </div>
                 )}
+                {result.interest_score != null && result.interest_score > 0 && (
+                  <div className="rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
+                    <p className="text-xs text-[#6B6B6B]">Interest Score</p>
+                    <p className="text-2xl font-extrabold text-[#363536]">{result.interest_score}/10</p>
+                  </div>
+                )}
+                <div className="rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
+                  <p className="text-xs text-[#6B6B6B]">¿Solicitaron la llamada?</p>
+                  <p className="text-lg font-extrabold leading-tight text-[#363536]">
+                    {result.prospect_requested_call === 'yes'
+                      ? 'Sí'
+                      : result.prospect_requested_call === 'no'
+                        ? 'No'
+                        : result.prospect_requested_call === 'unknown'
+                          ? 'No consta'
+                          : '—'}
+                  </p>
+                </div>
                 <div className="rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">
                   <p className="text-xs text-[#6B6B6B]">Prioridad</p>
                   <p className="text-2xl font-extrabold text-[#363536]">{result.priority || 'N/A'}</p>
@@ -331,69 +422,74 @@ export default function ProspectosPage() {
             </CardContent>
           </Card>
 
-          <Tabs defaultValue="research" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="research">🔍 Research</TabsTrigger>
-              <TabsTrigger value="analysis">📊 Analysis</TabsTrigger>
-              <TabsTrigger value="outreach">✉️ Outreach</TabsTrigger>
-              <TabsTrigger value="action">📋 Action Plan</TabsTrigger>
+          <Tabs defaultValue="intel" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+              <TabsTrigger value="intel">🧠 Prospect Intel</TabsTrigger>
+              <TabsTrigger value="brief">📋 Pre-Call Brief</TabsTrigger>
+              <TabsTrigger value="proposal">📄 Propuesta</TabsTrigger>
+              <TabsTrigger value="action">🧭 Coordinador</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="research" className="space-y-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Investigación de la Empresa</CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCopy(result.research, 'Investigación')}
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copiar
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-[#363536]">{result.research}</pre>
+            <TabsContent value="intel" className="space-y-4">
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy(result.research, 'Prospect Intel')}
+                  className="border-[#E5E5E5]"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copiar JSON
+                </Button>
+              </div>
+              <ProspectIntelCards raw={result.research} />
+            </TabsContent>
+
+            <TabsContent value="brief" className="space-y-4">
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy(result.analysis, 'Pre-Call Brief')}
+                  className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copiar
+                </Button>
+              </div>
+              <Card className="border-[#E5E5E5]">
+                <CardContent className="pt-6">
+                  <MarkdownBlock content={result.analysis} />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="analysis" className="space-y-4">
+            <TabsContent value="proposal" className="space-y-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Análisis Estratégico</CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCopy(result.analysis, 'Análisis')}
-                    className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copiar
-                  </Button>
+                  <CardTitle>Propuesta comercial</CardTitle>
+                  {result.outreach ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopy(result.outreach!, 'Propuesta')}
+                      className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copiar
+                    </Button>
+                  ) : null}
                 </CardHeader>
                 <CardContent>
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-[#363536]">{result.analysis}</pre>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="outreach" className="space-y-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Mensajes de Outreach</CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCopy(result.outreach, 'Outreach')}
-                    className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copiar Todo
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-[#363536]">{result.outreach}</pre>
+                  {result.outreach ? (
+                    <MarkdownBlock content={result.outreach} />
+                  ) : (
+                    <p className="text-sm text-[#6B6B6B]">
+                      Tras la discovery, abre la{' '}
+                      <strong>ficha del prospecto</strong> en Historial para pegar la transcripción y generar la
+                      propuesta.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -401,11 +497,11 @@ export default function ProspectosPage() {
             <TabsContent value="action" className="space-y-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Plan de Acción</CardTitle>
+                  <CardTitle>Coordinador — próximos pasos</CardTitle>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleCopy(result.coordinator, 'Plan de Acción')}
+                    onClick={() => handleCopy(result.coordinator, 'Coordinador')}
                     className="border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
                   >
                     <Copy className="mr-2 h-4 w-4" />
@@ -413,13 +509,21 @@ export default function ProspectosPage() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-[#363536]">{result.coordinator}</pre>
+                  <MarkdownBlock content={result.coordinator} />
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              variant="outline"
+              className="flex-1 border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]"
+              onClick={() => router.push(`/dashboard/prospectos/historial/${result.prospect_id}`)}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Abrir ficha (transcripción &amp; propuesta)
+            </Button>
             <Button onClick={handleReset} variant="outline" className="flex-1 border-[#E5E5E5] text-[#363536] hover:bg-[#F0EFED]">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Analizar Otro Prospecto

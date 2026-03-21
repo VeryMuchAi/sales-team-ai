@@ -15,6 +15,7 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "700"],
 });
 
+/** Favicon: archivo `app/favicon.ico` (lo detecta Next.js automáticamente). */
 export const metadata: Metadata = {
   title: "Sales Intelligence - Verymuch.Ai",
   description: "Herramienta de inteligencia de ventas con análisis AI de prospectos",

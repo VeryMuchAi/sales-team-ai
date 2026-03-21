@@ -75,11 +75,17 @@ export default function LeadDetailPage() {
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this lead?')) return;
-    const res = await fetch(`/api/leads/${params.id}`, { method: 'DELETE' });
-    if (res.ok) {
-      toast.success('Lead deleted');
+    if (!confirm('¿Eliminar este lead? Esta acción no se puede deshacer.')) return;
+    try {
+      const res = await fetch(`/api/leads/${params.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((data as { error?: string }).error || 'No se pudo eliminar');
+      }
+      toast.success('Lead eliminado');
       router.push('/dashboard/leads');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al eliminar');
     }
   }
 
@@ -104,7 +110,16 @@ export default function LeadDetailPage() {
         <LeadScoreBadge score={lead.ai_score} />
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
+        {lead.prospect_id && (
+          <Button
+            variant="outline"
+            className="border-[#AAD4AE] bg-[#D6EDD8]/40 text-[#363536] hover:bg-[#D6EDD8]"
+            onClick={() => router.push(`/dashboard/prospectos/historial/${lead.prospect_id}`)}
+          >
+            Ver en Prospectos AI
+          </Button>
+        )}
         <Select value={lead.status} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-40">
             <SelectValue />
@@ -160,23 +175,29 @@ export default function LeadDetailPage() {
         </Card>
       </div>
 
-      {lead.ai_score_reasons && lead.ai_score_reasons.length > 0 && (
+      {lead.ai_score_reasons && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">AI Score Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {lead.ai_score_reasons.map((reason, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <div>
-                    <span className="font-medium">{reason.factor}</span>
-                    <span className="ml-2 text-muted-foreground">{reason.explanation}</span>
+            {Array.isArray(lead.ai_score_reasons) && lead.ai_score_reasons.length > 0 ? (
+              <div className="space-y-2">
+                {lead.ai_score_reasons.map((reason, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <div>
+                      <span className="font-medium">{reason.factor}</span>
+                      <span className="ml-2 text-muted-foreground">{reason.explanation}</span>
+                    </div>
+                    <Badge variant="outline">{reason.score} pts</Badge>
                   </div>
-                  <Badge variant="outline">{reason.score} pts</Badge>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <pre className="whitespace-pre-wrap text-xs text-muted-foreground">
+                {JSON.stringify(lead.ai_score_reasons, null, 2)}
+              </pre>
+            )}
           </CardContent>
         </Card>
       )}
