@@ -34,7 +34,13 @@ Tras guardar, redeploy.
 
 ### 4. Supabase (auth)
 
-- URL de redirect / Site URL: `https://salesintelligence.verymuch.ai` (y `http://localhost:3000` para desarrollo).
+- **Site URL** (Authentication → URL Configuration): `https://salesintelligence.verymuch.ai` (y `http://localhost:3000` en dev).
+- **Redirect URLs** (lista permitida): incluye al menos:
+  - `http://localhost:3000/**`
+  - `https://salesintelligence.verymuch.ai/**`
+  - En concreto, la recuperación de contraseña usa:  
+    `http://localhost:3000/auth/reset-password` y  
+    `https://salesintelligence.verymuch.ai/auth/reset-password`
 - Ejecuta en Supabase el SQL de `supabase/schema.sql` sección **Whitelist** + `additional_context` si aún no lo aplicaste.
 
 ### Nota sobre `verymuch.ai/salesintelligence` (path)

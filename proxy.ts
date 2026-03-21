@@ -30,6 +30,13 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Registro público deshabilitado: /signup → /login
+  if (request.nextUrl.pathname === '/signup') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
   // Whitelist: solo emails autorizados (tabla whitelisted_emails + RPC is_email_whitelisted)
   if (user?.email && request.nextUrl.pathname.startsWith('/dashboard')) {
     const allowed = await isEmailWhitelisted(supabase, user.email);
