@@ -13,12 +13,16 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Copy, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { readTranscriptFromFile } from '@/lib/utils/read-transcript-file';
+import type { Lead } from '@/lib/types';
+import { embeddedProfile, createdByLabel } from '@/lib/utils/creator-display';
 import { ProspectIntelCards } from '@/components/prospects/ProspectIntelCards';
 import { MarkdownBlock } from '@/components/prospects/MarkdownBlock';
 import { StageStepper, defaultTabForStage } from '@/components/prospects/StageStepper';
 
 interface ProspectRow {
   id: string;
+  user_id: string;
+  profiles?: Lead['profiles'];
   company_name: string;
   website_url: string | null;
   contact_name: string | null;
@@ -67,7 +71,7 @@ export default function ProspectDetailPage() {
     const { data: p, error: pErr } = await supabase
       .from('prospects')
       .select(
-        'id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal'
+        'id, user_id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal, profiles(full_name, email)'
       )
       .eq('id', prospectId)
       .single();
@@ -247,7 +251,10 @@ export default function ProspectDetailPage() {
                   : 'Sin resultado de agentes aún'}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-[#E5E5E5] text-[#6B6B6B]">
+                {createdByLabel(embeddedProfile(prospect.profiles))}
+              </Badge>
               {agentResult?.priority && (
                 <Badge className={getPriorityColor(agentResult.priority)}>{agentResult.priority}</Badge>
               )}

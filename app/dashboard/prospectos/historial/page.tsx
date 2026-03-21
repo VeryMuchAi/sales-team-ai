@@ -25,12 +25,16 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Download, Search, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Lead } from '@/lib/types';
+import { embeddedProfile, createdByLabel } from '@/lib/utils/creator-display';
 
 interface ProspectWithResult {
   id: string;
+  user_id: string;
   company_name: string;
   website_url: string | null;
   created_at: string;
+  profiles?: Lead['profiles'];
   agent_results: {
     id: string;
     icp_score: number | null;
@@ -52,7 +56,9 @@ export default function HistorialPage() {
 
     let query = supabase
       .from('prospects')
-      .select('id, company_name, website_url, created_at, agent_results(id, icp_score, timing_score, priority, created_at)')
+      .select(
+        'id, user_id, company_name, website_url, created_at, profiles(full_name, email), agent_results(id, icp_score, timing_score, priority, created_at)'
+      )
       .order('created_at', { ascending: false });
 
     if (search) {
@@ -245,6 +251,7 @@ export default function HistorialPage() {
                     <TableHead className="text-center">ICP Score</TableHead>
                     <TableHead className="text-center">Timing Score</TableHead>
                     <TableHead className="text-center">Prioridad</TableHead>
+                    <TableHead>Creado por</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -291,6 +298,9 @@ export default function HistorialPage() {
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
+                        </TableCell>
+                        <TableCell className="max-w-[160px] text-xs text-muted-foreground">
+                          {createdByLabel(embeddedProfile(prospect.profiles))}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(prospect.created_at).toLocaleDateString('es-ES', {

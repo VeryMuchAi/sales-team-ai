@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { embeddedProfile, createdByLabel } from '@/lib/utils/creator-display';
 import {
   Table,
   TableBody,
@@ -24,6 +27,13 @@ interface LeadTableProps {
 
 export function LeadTable({ leads, onLeadDeleted }: LeadTableProps) {
   const router = useRouter();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setCurrentUserId(user?.id ?? null));
+  }, []);
 
   async function handleDelete(e: React.MouseEvent, lead: Lead) {
     e.stopPropagation();
@@ -58,13 +68,14 @@ export function LeadTable({ leads, onLeadDeleted }: LeadTableProps) {
             <TableHead className="text-center">Score</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Source</TableHead>
+            <TableHead>Creado por</TableHead>
             <TableHead className="w-[72px] text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {leads.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-[#6B6B6B]">
+              <TableCell colSpan={8} className="h-24 text-center text-[#6B6B6B]">
                 No leads found.
               </TableCell>
             </TableRow>
@@ -109,17 +120,24 @@ export function LeadTable({ leads, onLeadDeleted }: LeadTableProps) {
                     <span className="text-[#6B6B6B]">{lead.source}</span>
                   )}
                 </TableCell>
+                <TableCell className="max-w-[140px] text-xs text-[#6B6B6B]">
+                  {createdByLabel(embeddedProfile(lead.profiles))}
+                </TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-[#6B6B6B] hover:text-red-600"
-                    title="Eliminar lead"
-                    onClick={(e) => handleDelete(e, lead)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {currentUserId === lead.user_id ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-[#6B6B6B] hover:text-red-600"
+                      title="Eliminar lead"
+                      onClick={(e) => handleDelete(e, lead)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-[#B0B0B0]">—</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))

@@ -338,3 +338,10 @@ grant execute on function public.is_email_whitelisted(text) to anon, authenticat
 -- Emails del equipo (ajusta según tu lista). Ejemplo:
 -- insert into public.whitelisted_emails (email) values ('jorge@verymuch.ai'), ('info@verymuch.ai')
 -- on conflict (email) do nothing;
+
+-- ============================================================
+-- 11. RLS compartida (equipo): prospects, leads, agent_results, lead_activities
+-- SELECT/INSERT/UPDATE colaborativos; DELETE solo el creador; ver SQL completo en:
+-- supabase/migrations/20260321_shared_team_rls.sql
+-- Requiere además policy en profiles para SELECT global (mostrar "Creado por").
+-- ============================================================

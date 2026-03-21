@@ -15,9 +15,8 @@ export async function GET(
 
   const { data: lead, error } = await supabase
     .from('leads')
-    .select('*')
+    .select('*, profiles(full_name, email)')
     .eq('id', id)
-    .eq('user_id', user.id)
     .single();
 
   if (error) {
@@ -52,8 +51,7 @@ export async function PATCH(
     .from('leads')
     .update(body)
     .eq('id', id)
-    .eq('user_id', user.id)
-    .select()
+    .select('*, profiles(full_name, email)')
     .single();
 
   if (error) {
@@ -85,11 +83,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { error } = await supabase
-    .from('leads')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id);
+  const { error } = await supabase.from('leads').delete().eq('id', id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

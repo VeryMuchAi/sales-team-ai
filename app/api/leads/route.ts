@@ -18,8 +18,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('leads')
-    .select('*')
-    .eq('user_id', user.id);
+    .select('*, profiles(full_name, email)');
 
   if (status) query = query.eq('status', status);
   if (icpId) query = query.eq('icp_id', icpId);

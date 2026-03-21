@@ -13,7 +13,6 @@ export async function GET() {
   const { data: leads, error } = await supabase
     .from('leads')
     .select('*')
-    .eq('user_id', user.id)
     .order('ai_score', { ascending: false });
 
   if (error) {

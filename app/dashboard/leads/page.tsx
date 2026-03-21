@@ -19,7 +19,7 @@ export default function LeadsPage() {
     const supabase = createClient();
     let query = supabase
       .from('leads')
-      .select('*')
+      .select('*, profiles(full_name, email)')
       .order('ai_score', { ascending: false, nullsFirst: false });
 
     if (status !== 'all') {

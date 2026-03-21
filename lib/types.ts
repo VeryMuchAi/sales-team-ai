@@ -19,11 +19,19 @@ export interface ICP {
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted';
 export type LeadSource = 'ai_generated' | 'manual' | 'imported';
 
+/** Perfil del creador (join opcional `profiles`) */
+export interface LeadCreatorProfile {
+  full_name: string | null;
+  email: string | null;
+}
+
 export interface Lead {
   id: string;
   user_id: string;
   icp_id: string | null;
   prospect_id: string | null;
+  /** Embebido con .select('*, profiles(full_name, email)') */
+  profiles?: LeadCreatorProfile | LeadCreatorProfile[] | null;
   company_name: string;
   company_website: string | null;
   company_industry: string | null;

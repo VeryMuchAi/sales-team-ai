@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
       .from('leads')
       .select('*')
       .eq('id', lead_id)
-      .eq('user_id', user.id)
       .single();
 
     if (!lead) {

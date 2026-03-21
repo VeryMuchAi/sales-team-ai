@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Sparkles, RefreshCw, Trash2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { embeddedProfile, createdByLabel } from '@/lib/utils/creator-display';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,13 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState<Lead | null>(null);
   const [activities, setActivities] = useState<LeadActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setCurrentUserId(user?.id ?? null));
+  }, []);
 
   useEffect(() => {
     async function loadLead() {
@@ -102,12 +111,17 @@ export default function LeadDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/leads')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold">{lead.company_name}</h1>
-        <LeadScoreBadge score={lead.ai_score} />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/leads')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold">{lead.company_name}</h1>
+          <LeadScoreBadge score={lead.ai_score} />
+        </div>
+        <Badge variant="outline" className="w-fit border-[#E5E5E5] text-[#6B6B6B]">
+          {createdByLabel(embeddedProfile(lead.profiles))}
+        </Badge>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -136,9 +150,11 @@ export default function LeadDetailPage() {
           <Sparkles className="mr-2 h-4 w-4" />
           Enrich
         </Button>
-        <Button variant="destructive" size="icon" onClick={handleDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {currentUserId === lead.user_id && (
+          <Button variant="destructive" size="icon" onClick={handleDelete} title="Eliminar lead">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

@@ -37,8 +37,7 @@ export async function POST(req: NextRequest) {
     const { data: leads } = await supabase
       .from('leads')
       .select('*')
-      .in('id', lead_ids)
-      .eq('user_id', user.id);
+      .in('id', lead_ids);
 
     if (!leads?.length) {
       return NextResponse.json({ error: 'No leads found' }, { status: 404 });

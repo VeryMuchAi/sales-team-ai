@@ -83,8 +83,7 @@ export async function upsertLeadFromProspectIntel(
   const { data: existing, error: findErr } = await supabase
     .from('leads')
     .select('id')
-    .eq('user_id', input.userId)
-    .eq('company_name', companyName)
+    .eq('prospect_id', input.prospectId)
     .maybeSingle();
 
   if (findErr) {
@@ -92,8 +91,7 @@ export async function upsertLeadFromProspectIntel(
     return { error: findErr.message };
   }
 
-  const payload = {
-    user_id: input.userId,
+  const payloadBase = {
     company_name: companyName,
     company_website: input.websiteUrl ?? null,
     company_industry: sector,
@@ -111,7 +109,8 @@ export async function upsertLeadFromProspectIntel(
   };
 
   if (existing?.id) {
-    const { error: upErr } = await supabase.from('leads').update(payload).eq('id', existing.id);
+    // No tocar user_id: conservar al creador original del lead
+    const { error: upErr } = await supabase.from('leads').update(payloadBase).eq('id', existing.id);
     if (upErr) {
       console.error('upsertLead update error:', upErr);
       return { error: upErr.message };
@@ -121,7 +120,10 @@ export async function upsertLeadFromProspectIntel(
 
   const { data: inserted, error: insErr } = await supabase
     .from('leads')
-    .insert(payload)
+    .insert({
+      ...payloadBase,
+      user_id: input.userId,
+    })
     .select('id')
     .single();
 

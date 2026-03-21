@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
       .from('prospects')
       .select('id, company_name, contact_name, additional_context')
       .eq('id', prospect_id)
-      .eq('user_id', user.id)
       .single();
 
     if (pErr || !prospect) {
