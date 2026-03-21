@@ -48,6 +48,8 @@ export interface CallAnalyzerInput {
   pre_call_brief: string;
   company_name: string;
   additional_context?: string;
+  /** Objeciones, comentarios y aprendizajes del equipo (markdown) */
+  sales_interaction_notes?: string;
 }
 
 export interface ProposalGeneratorInput {
@@ -58,6 +60,8 @@ export interface ProposalGeneratorInput {
   contact_name?: string;
   language?: 'es' | 'en';
   additional_context?: string;
+  /** Objeciones, comentarios y aprendizajes del equipo (markdown) */
+  sales_interaction_notes?: string;
 }
 
 export interface CoordinatorOrchestratorInput {

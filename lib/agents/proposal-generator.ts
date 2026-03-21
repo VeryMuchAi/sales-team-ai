@@ -1,6 +1,7 @@
 import { anthropic, MODEL } from '@/lib/ai/anthropic';
 import { KB_PROPOSAL } from '@/lib/knowledge-base/verymuch-context';
 import { additionalContextBlock } from '@/lib/knowledge-base/additional-context';
+import { salesInteractionNotesBlock } from '@/lib/knowledge-base/sales-interaction-notes';
 import type { ProposalGeneratorInput } from './types';
 import { textFromMessage } from './utils';
 
@@ -13,6 +14,9 @@ Eres el agente generador de propuestas de Verymuch.ai. Tu trabajo es crear un bo
 
 ## Contexto adicional del equipo comercial
 Si el mensaje de usuario incluye la sección "Contexto adicional proporcionado por el equipo comercial", incorpórala en el resumen ejecutivo, el diagnóstico y los próximos pasos cuando sea relevante.
+
+## Notas de interacción (objeciones, comentarios, aprendizajes)
+Si aparece "Notas del equipo sobre la relación comercial", úsalas para personalizar la propuesta (objeciones a despejar, contexto no reflejado solo en el análisis de llamada, aprendizajes).
 
 ## Tu tarea
 Genera una propuesta comercial estructurada con:
@@ -34,6 +38,7 @@ Genera en español por defecto; en inglés si language=en.
 export async function runProposalGenerator(input: ProposalGeneratorInput): Promise<string> {
   const lang = input.language === 'en' ? 'en' : 'es';
   const extra = additionalContextBlock(input.additional_context);
+  const salesNotes = salesInteractionNotesBlock(input.sales_interaction_notes);
   const userPrompt = `
 **Idioma de salida:** ${lang === 'en' ? 'English' : 'Español'}
 
@@ -49,6 +54,7 @@ ${input.pre_call_brief}
 **Análisis de llamada (Call Analysis):**
 ${input.call_analysis}
 ${extra ? `\n${extra}\n` : ''}
+${salesNotes ? `\n${salesNotes}\n` : ''}
 
 Redacta la propuesta comercial completa.
 `.trim();

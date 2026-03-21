@@ -30,6 +30,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 6. Click en **RUN** (esquina inferior derecha)
 7. Espera el mensaje de éxito ✅
 
+**Opcional — Material y notas (varias transcripciones, archivos, objeciones):**  
+Si vas a usar la pestaña **Material y notas** en el detalle de un prospecto, ejecuta también en SQL Editor el archivo  
+`supabase/migrations/20260322_prospect_documents_and_notes.sql` (tabla `prospect_documents`, columnas de notas y bucket de Storage).
+
 ---
 
 ### ☐ Paso 3: Whitelist de Emails (1 min)

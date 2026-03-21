@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runCallAnalyzer } from '@/lib/agents/call-analyzer';
+import { formatSalesInteractionNotes } from '@/lib/knowledge-base/sales-interaction-notes';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -29,7 +30,9 @@ export async function POST(req: NextRequest) {
 
     const { data: prospect, error: pErr } = await supabase
       .from('prospects')
-      .select('id, company_name, contact_name, additional_context')
+      .select(
+        'id, company_name, contact_name, additional_context, prospect_objections, prospect_comments, prospect_learnings'
+      )
       .eq('id', prospect_id)
       .single();
 
@@ -56,6 +59,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const salesNotes = formatSalesInteractionNotes(
+      prospect.prospect_objections as string | null | undefined,
+      prospect.prospect_comments as string | null | undefined,
+      prospect.prospect_learnings as string | null | undefined
+    );
+
     const call_analysis = await runCallAnalyzer({
       transcript,
       prospect_intel_json: latestResult.research_output,
@@ -63,6 +72,7 @@ export async function POST(req: NextRequest) {
       company_name: prospect.company_name,
       additional_context:
         typeof prospect.additional_context === 'string' ? prospect.additional_context : undefined,
+      sales_interaction_notes: salesNotes || undefined,
     });
 
     await supabase

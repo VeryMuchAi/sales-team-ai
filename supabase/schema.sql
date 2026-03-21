@@ -345,3 +345,10 @@ grant execute on function public.is_email_whitelisted(text) to anon, authenticat
 -- supabase/migrations/20260321_shared_team_rls.sql
 -- Requiere además policy en profiles para SELECT global (mostrar "Creado por").
 -- ============================================================
+
+-- ============================================================
+-- 12. Documentos del prospecto + notas de seguimiento (Material y notas)
+-- Ver migración completa: supabase/migrations/20260322_prospect_documents_and_notes.sql
+-- Columnas en prospects: prospect_objections, prospect_comments, prospect_learnings
+-- Tabla: prospect_documents (Storage bucket: prospect-documents)
+-- ============================================================

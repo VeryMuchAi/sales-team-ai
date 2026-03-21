@@ -18,6 +18,7 @@ import { embeddedProfile, createdByLabel } from '@/lib/utils/creator-display';
 import { ProspectIntelCards } from '@/components/prospects/ProspectIntelCards';
 import { MarkdownBlock } from '@/components/prospects/MarkdownBlock';
 import { StageStepper, defaultTabForStage } from '@/components/prospects/StageStepper';
+import { ProspectDocumentsAndNotes } from '@/components/prospects/ProspectDocumentsAndNotes';
 
 interface ProspectRow {
   id: string;
@@ -34,6 +35,9 @@ interface ProspectRow {
   call_transcript: string | null;
   call_analysis: string | null;
   proposal: string | null;
+  prospect_objections: string | null;
+  prospect_comments: string | null;
+  prospect_learnings: string | null;
 }
 
 interface AgentResultRow {
@@ -71,7 +75,7 @@ export default function ProspectDetailPage() {
     const { data: p, error: pErr } = await supabase
       .from('prospects')
       .select(
-        'id, user_id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal, profiles(full_name, email)'
+        'id, user_id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal, prospect_objections, prospect_comments, prospect_learnings, profiles(full_name, email)'
       )
       .eq('id', prospectId)
       .single();
@@ -298,7 +302,7 @@ export default function ProspectDetailPage() {
       </Card>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-[#F0EFED] p-1 md:grid-cols-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-[#F0EFED] p-1 sm:grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="intel" className="text-xs md:text-sm">
             Prospect Intel
           </TabsTrigger>
@@ -310,6 +314,9 @@ export default function ProspectDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="proposal" className="text-xs md:text-sm">
             Propuesta
+          </TabsTrigger>
+          <TabsTrigger value="material" className="text-xs md:text-sm">
+            Material y notas
           </TabsTrigger>
           <TabsTrigger value="action" className="text-xs md:text-sm">
             Coordinador
@@ -357,7 +364,8 @@ export default function ProspectDetailPage() {
                 <CardTitle className="text-base text-[#363536]">Transcripción de la discovery call</CardTitle>
                 <CardDescription>
                   Pega el texto o sube un archivo (.txt, .md, .csv, .srt, .vtt). Word: guarda como .txt o pega aquí.
-                  Luego ejecuta el Call Analyzer.
+                  Puedes guardar varias transcripciones en la pestaña «Material y notas» y usar «Usar en análisis».
+                  Las objeciones y notas del equipo también se envían al analizar.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -443,6 +451,22 @@ export default function ProspectDetailPage() {
               </Card>
             </>
           )}
+        </TabsContent>
+
+        <TabsContent value="material" className="space-y-4 pt-4">
+          <ProspectDocumentsAndNotes
+            prospectId={prospectId}
+            initialObjections={prospect.prospect_objections}
+            initialComments={prospect.prospect_comments}
+            initialLearnings={prospect.prospect_learnings}
+            onNotesSaved={() => loadData()}
+            onUseTranscriptForAnalysis={(text) => {
+              setTranscript(text);
+              setShowTranscriptInput(true);
+              setTab('call');
+              toast.success('Texto cargado en Call Analysis');
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="proposal" className="space-y-4 pt-4">

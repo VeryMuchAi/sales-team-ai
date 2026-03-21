@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { runProposalGenerator } from '@/lib/agents/proposal-generator';
+import { formatSalesInteractionNotes } from '@/lib/knowledge-base/sales-interaction-notes';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -26,7 +27,9 @@ export async function POST(req: NextRequest) {
 
     const { data: prospect, error: pErr } = await supabase
       .from('prospects')
-      .select('id, company_name, contact_name, call_analysis, additional_context')
+      .select(
+        'id, company_name, contact_name, call_analysis, additional_context, prospect_objections, prospect_comments, prospect_learnings'
+      )
       .eq('id', prospect_id)
       .single();
 
@@ -63,6 +66,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing agent results for prospect' }, { status: 400 });
     }
 
+    const salesNotes = formatSalesInteractionNotes(
+      prospect.prospect_objections as string | null | undefined,
+      prospect.prospect_comments as string | null | undefined,
+      prospect.prospect_learnings as string | null | undefined
+    );
+
     const proposal = await runProposalGenerator({
       prospect_intel_json: latestResult.research_output ?? '',
       pre_call_brief: latestResult.analysis_output ?? '',
@@ -72,6 +81,7 @@ export async function POST(req: NextRequest) {
       language: language === 'en' ? 'en' : 'es',
       additional_context:
         typeof prospect.additional_context === 'string' ? prospect.additional_context : undefined,
+      sales_interaction_notes: salesNotes || undefined,
     });
 
     await supabase

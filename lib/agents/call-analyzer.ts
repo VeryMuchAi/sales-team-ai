@@ -1,6 +1,7 @@
 import { anthropic, MODEL } from '@/lib/ai/anthropic';
 import { KB_CALL_ANALYZER } from '@/lib/knowledge-base/verymuch-context';
 import { additionalContextBlock } from '@/lib/knowledge-base/additional-context';
+import { salesInteractionNotesBlock } from '@/lib/knowledge-base/sales-interaction-notes';
 import type { CallAnalyzerInput } from './types';
 import { textFromMessage } from './utils';
 
@@ -13,6 +14,9 @@ Eres el agente de análisis de llamadas de Verymuch.ai. Tu trabajo es procesar l
 
 ## Contexto adicional del equipo comercial
 Si el mensaje de usuario incluye la sección "Contexto adicional proporcionado por el equipo comercial", intégrala en tu análisis: úsala como señales de intención previas y para priorizar dolores y próximos pasos.
+
+## Notas de interacción (objeciones, comentarios, aprendizajes)
+Si aparece la sección "Notas del equipo sobre la relación comercial", crúzala con la transcripción: refuerza objeciones explícitas, contexto comercial que no salió en la llamada y aprendizajes previos del equipo.
 
 ## Tu tarea
 Analiza la transcripción y produce un informe estructurado con secciones claras:
@@ -31,6 +35,7 @@ Responde en español salvo que la transcripción sea mayormente en inglés.
 
 export async function runCallAnalyzer(input: CallAnalyzerInput): Promise<string> {
   const extra = additionalContextBlock(input.additional_context);
+  const salesNotes = salesInteractionNotesBlock(input.sales_interaction_notes);
 
   const userPrompt = `
 **Empresa:** ${input.company_name}
@@ -44,6 +49,7 @@ ${input.pre_call_brief}
 **Transcripción de la discovery call:**
 ${input.transcript}
 ${extra ? `\n${extra}\n` : ''}
+${salesNotes ? `\n${salesNotes}\n` : ''}
 `.trim();
 
   const message = await anthropic.messages.create({
