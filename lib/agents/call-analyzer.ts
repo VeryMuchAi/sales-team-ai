@@ -36,8 +36,11 @@ Responde en español salvo que la transcripción sea mayormente en inglés.
 export async function runCallAnalyzer(input: CallAnalyzerInput): Promise<string> {
   const extra = additionalContextBlock(input.additional_context);
   const salesNotes = salesInteractionNotesBlock(input.sales_interaction_notes);
+  const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const userPrompt = `
+**Fecha actual:** ${today}
+
 **Empresa:** ${input.company_name}
 
 **Prospect Intel previo (JSON):**
