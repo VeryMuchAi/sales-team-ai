@@ -352,3 +352,11 @@ grant execute on function public.is_email_whitelisted(text) to anon, authenticat
 -- Columnas en prospects: prospect_objections, prospect_comments, prospect_learnings
 -- Tabla: prospect_documents (Storage bucket: prospect-documents)
 -- ============================================================
+
+-- ============================================================
+-- 13. Historial de llamadas por prospecto
+-- Ver migración completa: supabase/migrations/20260323_prospect_call_sessions.sql
+-- Tabla: prospect_call_sessions (una fila por transcripción + análisis)
+-- Permite múltiples llamadas por prospecto con sesiones numeradas.
+-- Migración incluye mover transcripts existentes de prospects.call_transcript.
+-- ============================================================

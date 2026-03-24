@@ -39,7 +39,9 @@ export async function runProposalGenerator(input: ProposalGeneratorInput): Promi
   const lang = input.language === 'en' ? 'en' : 'es';
   const extra = additionalContextBlock(input.additional_context);
   const salesNotes = salesInteractionNotesBlock(input.sales_interaction_notes);
+  const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
   const userPrompt = `
+**Fecha actual:** ${today}
 **Idioma de salida:** ${lang === 'en' ? 'English' : 'Español'}
 
 **Empresa:** ${input.company_name}

@@ -99,7 +99,18 @@ export default function ProspectDetailPage() {
 
     setProspect(p as ProspectRow);
     setAgentResult(ar as AgentResultRow | null);
-    setTab(defaultTabForStage(p.stage));
+
+    // Pick the best starting tab based on what data is actually available.
+    // If the stage says 'intel' but intel is empty and brief has content, start on 'brief'.
+    const resolvedIntelRaw =
+      ar?.research_output ??
+      (p.prospect_intel ? JSON.stringify(p.prospect_intel) : '');
+    const resolvedBriefText = p.pre_call_brief ?? ar?.analysis_output ?? '';
+    let initialTab = defaultTabForStage(p.stage);
+    if (initialTab === 'intel' && !resolvedIntelRaw.trim() && resolvedBriefText.trim()) {
+      initialTab = 'brief';
+    }
+    setTab(initialTab);
     setLoading(false);
   }, [prospectId, router]);
 
