@@ -56,6 +56,8 @@ export interface CallAnalyzerInput {
   sales_interaction_notes?: string;
 }
 
+export type ProposalCurrency = 'USD' | 'EUR' | 'MXN' | 'COP';
+
 export interface ProposalGeneratorInput {
   prospect_intel_json: string;
   pre_call_brief: string;
@@ -63,11 +65,14 @@ export interface ProposalGeneratorInput {
   company_name: string;
   contact_name?: string;
   language?: 'es' | 'en';
+  currency?: ProposalCurrency;
   additional_context?: string;
   /** Objeciones, comentarios y aprendizajes del equipo (markdown) */
   sales_interaction_notes?: string;
   /** Documento PDF del cliente (presentación, diagrama, etc.) en base64 */
   document_base64?: string;
+  /** Feedback del equipo para regenerar/mejorar la propuesta */
+  improvement_feedback?: string;
 }
 
 export interface CoordinatorOrchestratorInput {

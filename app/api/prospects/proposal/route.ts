@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { prospect_id, language } = body as { prospect_id?: string; language?: 'es' | 'en' };
+    const { prospect_id, language, currency } = body as {
+      prospect_id?: string;
+      language?: 'es' | 'en';
+      currency?: 'USD' | 'EUR' | 'MXN' | 'COP';
+    };
 
     if (!prospect_id?.trim()) {
       return NextResponse.json({ success: false, error: 'prospect_id is required' }, { status: 400 });
@@ -80,6 +84,11 @@ export async function POST(req: NextRequest) {
       prospect.prospect_learnings as string | null | undefined
     );
 
+    const validCurrencies = ['USD', 'EUR', 'MXN', 'COP'] as const;
+    const selectedCurrency = validCurrencies.includes(currency as (typeof validCurrencies)[number])
+      ? (currency as (typeof validCurrencies)[number])
+      : 'USD';
+
     // Auto-fetch the most recent PDF presentation document uploaded by the team
     let document_base64: string | undefined;
     const { data: pdfDocs } = await supabase
@@ -116,6 +125,7 @@ export async function POST(req: NextRequest) {
       company_name: prospect.company_name,
       contact_name: prospect.contact_name ?? undefined,
       language: language === 'en' ? 'en' : 'es',
+      currency: selectedCurrency,
       additional_context:
         typeof prospect.additional_context === 'string' ? prospect.additional_context : undefined,
       sales_interaction_notes: salesNotes || undefined,
@@ -127,6 +137,7 @@ export async function POST(req: NextRequest) {
       .update({
         stage: 'proposal',
         proposal,
+        proposal_currency: selectedCurrency,
       })
       .eq('id', prospect_id);
 
