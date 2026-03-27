@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Copy, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Copy, Loader2, MessageSquarePlus, RefreshCw, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { readTranscriptFromFile } from '@/lib/utils/read-transcript-file';
 import type { Lead } from '@/lib/types';
@@ -19,6 +19,15 @@ import { ProspectIntelCards } from '@/components/prospects/ProspectIntelCards';
 import { MarkdownBlock } from '@/components/prospects/MarkdownBlock';
 import { StageStepper, defaultTabForStage } from '@/components/prospects/StageStepper';
 import { ProspectDocumentsAndNotes } from '@/components/prospects/ProspectDocumentsAndNotes';
+
+type ProposalCurrency = 'USD' | 'EUR' | 'MXN' | 'COP';
+
+const CURRENCY_OPTIONS: { value: ProposalCurrency; label: string; symbol: string }[] = [
+  { value: 'USD', label: 'USD', symbol: '$' },
+  { value: 'EUR', label: 'EUR', symbol: '€' },
+  { value: 'MXN', label: 'MXN', symbol: '$MX' },
+  { value: 'COP', label: 'COP', symbol: '$CO' },
+];
 
 interface ProspectRow {
   id: string;
@@ -35,6 +44,7 @@ interface ProspectRow {
   call_transcript: string | null;
   call_analysis: string | null;
   proposal: string | null;
+  proposal_currency: ProposalCurrency | null;
   prospect_objections: string | null;
   prospect_comments: string | null;
   prospect_learnings: string | null;
@@ -67,6 +77,10 @@ export default function ProspectDetailPage() {
   const [proposalLoading, setProposalLoading] = useState(false);
   const [showTranscriptInput, setShowTranscriptInput] = useState(false);
   const [proposalLang, setProposalLang] = useState<'es' | 'en'>('es');
+  const [proposalCurrency, setProposalCurrency] = useState<ProposalCurrency>('USD');
+  const [showImprovePanel, setShowImprovePanel] = useState(false);
+  const [improveFeedback, setImproveFeedback] = useState('');
+  const [improveLoading, setImproveLoading] = useState(false);
   const transcriptFileInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
@@ -75,7 +89,7 @@ export default function ProspectDetailPage() {
     const { data: p, error: pErr } = await supabase
       .from('prospects')
       .select(
-        'id, user_id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal, prospect_objections, prospect_comments, prospect_learnings, profiles(full_name, email)'
+        'id, user_id, company_name, website_url, contact_name, contact_email, linkedin_url, stage, prospect_intel, pre_call_brief, call_transcript, call_analysis, proposal, proposal_currency, prospect_objections, prospect_comments, prospect_learnings, profiles(full_name, email)'
       )
       .eq('id', prospectId)
       .single();
@@ -100,6 +114,9 @@ export default function ProspectDetailPage() {
     setProspect(p as ProspectRow);
     setAgentResult(ar as AgentResultRow | null);
     setTab(defaultTabForStage(p.stage));
+    if ((p as ProspectRow).proposal_currency) {
+      setProposalCurrency((p as ProspectRow).proposal_currency!);
+    }
     setLoading(false);
   }, [prospectId, router]);
 
@@ -175,7 +192,7 @@ export default function ProspectDetailPage() {
       const res = await fetch('/api/prospects/proposal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prospect_id: prospectId, language: proposalLang }),
+        body: JSON.stringify({ prospect_id: prospectId, language: proposalLang, currency: proposalCurrency }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al generar propuesta');
@@ -186,6 +203,35 @@ export default function ProspectDetailPage() {
       toast.error(e instanceof Error ? e.message : 'Error');
     } finally {
       setProposalLoading(false);
+    }
+  }
+
+  async function handleImproveProposal() {
+    if (!improveFeedback.trim()) {
+      toast.error('Describe las mejoras que necesitas');
+      return;
+    }
+    setImproveLoading(true);
+    try {
+      const res = await fetch('/api/prospects/proposal/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prospect_id: prospectId,
+          feedback: improveFeedback.trim(),
+          currency: proposalCurrency,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al mejorar propuesta');
+      toast.success('Propuesta mejorada y guardada');
+      setImproveFeedback('');
+      setShowImprovePanel(false);
+      await loadData();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setImproveLoading(false);
     }
   }
 
@@ -470,17 +516,43 @@ export default function ProspectDetailPage() {
         </TabsContent>
 
         <TabsContent value="proposal" className="space-y-4 pt-4">
-          {canGenerateProposal && (
+          {/* Generation controls — shown when no proposal yet OR when user wants to regenerate */}
+          {(canGenerateProposal || (proposalText && !showImprovePanel)) && (
             <Card className="border-[#E5E5E5]">
               <CardHeader>
-                <CardTitle className="text-base text-[#363536]">Generar propuesta</CardTitle>
+                <CardTitle className="text-base text-[#363536]">
+                  {proposalText ? 'Configuración de la propuesta' : 'Generar propuesta pre-aprobada'}
+                </CardTitle>
                 <CardDescription>
-                  Idioma del borrador y generación con el Proposal Generator.
+                  Selecciona moneda e idioma. El agente generará una propuesta personalizada lista para presentar.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Label className="text-[#363536]">Idioma</Label>
+              <CardContent className="space-y-4">
+                {/* Currency selector */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Label className="w-16 shrink-0 text-[#363536]">Moneda</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CURRENCY_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setProposalCurrency(opt.value)}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          proposalCurrency === opt.value
+                            ? 'border-[#AAD4AE] bg-[#AAD4AE] text-[#363536]'
+                            : 'border-[#E5E5E5] text-[#6B6B6B] hover:border-[#AAD4AE]'
+                        }`}
+                      >
+                        <span className="mr-1 opacity-60">{opt.symbol}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Language selector */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Label className="w-16 shrink-0 text-[#363536]">Idioma</Label>
                   <div className="flex rounded-lg border border-[#E5E5E5] p-0.5">
                     <button
                       type="button"
@@ -502,37 +574,125 @@ export default function ProspectDetailPage() {
                     </button>
                   </div>
                 </div>
-                <Button
-                  onClick={handleGenerateProposal}
-                  disabled={proposalLoading}
-                  className="bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A]"
-                >
-                  {proposalLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generando…
-                    </>
-                  ) : (
-                    'Generar propuesta'
-                  )}
-                </Button>
+
+                {canGenerateProposal && (
+                  <Button
+                    onClick={handleGenerateProposal}
+                    disabled={proposalLoading}
+                    className="bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A]"
+                  >
+                    {proposalLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generando propuesta…
+                      </>
+                    ) : (
+                      'Generar propuesta pre-aprobada'
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
 
           {proposalText ? (
             <>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#E5E5E5]"
-                  onClick={() => handleCopy(proposalText, 'Propuesta')}
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copiar
-                </Button>
+              {/* Action bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-[#AAD4AE] text-[#3D7A4A]">
+                    {prospect.proposal_currency ?? proposalCurrency}
+                  </Badge>
+                  <span className="text-xs text-[#6B6B6B]">Propuesta pre-aprobada</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#E5E5E5]"
+                    onClick={() => handleCopy(proposalText, 'Propuesta')}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#E5E5E5]"
+                    onClick={() => {
+                      setShowImprovePanel((v) => !v);
+                    }}
+                  >
+                    <MessageSquarePlus className="mr-2 h-4 w-4" />
+                    Pedir mejoras
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-[#E5E5E5]"
+                    onClick={handleGenerateProposal}
+                    disabled={proposalLoading}
+                  >
+                    {proposalLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    Regenerar
+                  </Button>
+                </div>
               </div>
+
+              {/* Improve panel */}
+              {showImprovePanel && (
+                <Card className="border-[#AAD4AE] bg-[#F6FBF6]">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm text-[#363536]">Pedir mejoras al agente</CardTitle>
+                    <CardDescription>
+                      Describe qué quieres ajustar. El agente aprenderá de estas instrucciones para
+                      propuestas futuras de este prospecto.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Textarea
+                      value={improveFeedback}
+                      onChange={(e) => setImproveFeedback(e.target.value)}
+                      placeholder="Ej: Ajusta los precios a MXN, sé más directo en el resumen ejecutivo, añade más detalles sobre la Fase 1…"
+                      rows={4}
+                      className="text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleImproveProposal}
+                        disabled={improveLoading || !improveFeedback.trim()}
+                        className="bg-[#AAD4AE] text-[#363536] hover:bg-[#95C59A]"
+                        size="sm"
+                      >
+                        {improveLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Mejorando…
+                          </>
+                        ) : (
+                          'Aplicar mejoras'
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowImprovePanel(false);
+                          setImproveFeedback('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Proposal content */}
               <Card className="border-[#E5E5E5]">
                 <CardContent className="pt-6">
                   <MarkdownBlock content={proposalText} />
