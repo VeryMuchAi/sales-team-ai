@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Trash2, Download, FileText, Presentation, Paperclip, Sparkles } from 'lucide-react';
+import { Loader2, Trash2, Download, FileText, Presentation, Paperclip, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { readTranscriptFromFile } from '@/lib/utils/read-transcript-file';
 
@@ -82,8 +82,10 @@ export function ProspectDocumentsAndNotes({
 
   const [docs, setDocs] = useState<ProspectDocumentRow[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [uploadKind, setUploadKind] = useState<ProspectDocKind>('transcript');
   const [uploading, setUploading] = useState(false);
+  const [lastUploaded, setLastUploaded] = useState<string | null>(null);
 
   const [objections, setObjections] = useState(initialObjections ?? '');
   const [comments, setComments] = useState(initialComments ?? '');
@@ -98,6 +100,7 @@ export function ProspectDocumentsAndNotes({
 
   const loadDocuments = useCallback(async () => {
     setLoadingDocs(true);
+    setLoadError(null);
     const { data, error } = await supabase
       .from('prospect_documents')
       .select(
@@ -108,7 +111,10 @@ export function ProspectDocumentsAndNotes({
 
     if (error) {
       console.error(error);
-      toast.error('No se pudieron cargar los documentos (¿migración aplicada?)');
+      const msg = error.message?.includes('does not exist')
+        ? 'La tabla prospect_documents no existe. Ejecuta la migración en Supabase SQL Editor.'
+        : error.message || 'No se pudieron cargar los documentos';
+      setLoadError(msg);
       setDocs([]);
     } else {
       setDocs((data ?? []) as ProspectDocumentRow[]);
@@ -179,6 +185,7 @@ export function ProspectDocumentsAndNotes({
     }
 
     toast.success(`Subido: ${file.name}`);
+    setLastUploaded(file.name);
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -369,11 +376,46 @@ export function ProspectDocumentsAndNotes({
             </div>
           </div>
 
+          {/* Error banner if table doesn't exist */}
+          {loadError && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{loadError}</span>
+            </div>
+          )}
+
+          {/* Success banner after upload */}
+          {lastUploaded && !uploading && (
+            <div className="flex items-center gap-2 rounded-lg border border-[#AAD4AE] bg-[#D6EDD8]/40 p-3 text-sm text-[#3D7A4A]">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Subido correctamente: <strong>{lastUploaded}</strong></span>
+            </div>
+          )}
+
+          {/* Combinar transcripciones button */}
+          {!loadError && onUseTranscriptForAnalysis && docs.filter(d => d.extracted_text?.trim()).length >= 2 && (
+            <button
+              type="button"
+              onClick={() => {
+                const transcripts = docs
+                  .filter(d => d.extracted_text?.trim())
+                  .map((d, i) => `--- LLAMADA ${i + 1}: ${d.file_name} ---\n${d.extracted_text!.trim()}`)
+                  .join('\n\n');
+                onUseTranscriptForAnalysis(transcripts);
+                toast.success(`${docs.filter(d => d.extracted_text?.trim()).length} transcripciones combinadas y cargadas en Call Analysis`);
+              }}
+              className="w-full rounded-lg border border-[#AAD4AE] bg-[#D6EDD8]/30 px-3 py-2 text-sm font-medium text-[#3D7A4A] hover:bg-[#D6EDD8]/60 transition-colors"
+            >
+              <Sparkles className="mr-1.5 inline h-4 w-4" />
+              Combinar {docs.filter(d => d.extracted_text?.trim()).length} transcripciones y analizar juntas
+            </button>
+          )}
+
           {loadingDocs ? (
             <p className="text-sm text-[#6B6B6B]">Cargando documentos…</p>
-          ) : docs.length === 0 ? (
+          ) : !loadError && docs.length === 0 ? (
             <p className="text-sm text-[#6B6B6B]">Aún no hay archivos para este prospecto.</p>
-          ) : (
+          ) : !loadError && (
             <ul className="divide-y divide-[#E5E5E5] rounded-xl border border-[#E5E5E5] bg-[#FAF9F7]">
               {docs.map((doc) => (
                 <li key={doc.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -436,3 +478,4 @@ export function ProspectDocumentsAndNotes({
     </div>
   );
 }
+
