@@ -115,11 +115,28 @@ Si el contexto adicional indica reunión solicitada, referido, ARRI alto, o inte
 Devuelve SOLO el JSON solicitado.
 `.trim();
 
+  const messageContent = input.document_base64
+    ? [
+        {
+          type: 'document' as const,
+          source: {
+            type: 'base64' as const,
+            media_type: 'application/pdf' as const,
+            data: input.document_base64,
+          },
+          title: 'Documento compartido por el prospecto',
+          context:
+            'El prospecto compartió este documento (presentación, diagrama de flujo o informe). Extrae información clave sobre su operación, procesos, tecnología, dolores y contexto comercial para enriquecer el análisis.',
+        },
+        { type: 'text' as const, text: userPrompt },
+      ]
+    : userPrompt;
+
   const message = await anthropic.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: SYSTEM,
-    messages: [{ role: 'user', content: userPrompt }],
+    messages: [{ role: 'user', content: messageContent }],
   });
 
   const raw = textFromMessage(message);

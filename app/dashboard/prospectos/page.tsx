@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Search, Sparkles, Copy, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Search, Sparkles, Copy, ArrowLeft, ExternalLink, FileText, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProspectIntelCards } from '@/components/prospects/ProspectIntelCards';
 import { MarkdownBlock } from '@/components/prospects/MarkdownBlock';
 import { StageStepper } from '@/components/prospects/StageStepper';
+import { createClient } from '@/lib/supabase/client';
 
 interface AnalysisResult {
   prospect_id: string;
@@ -54,8 +55,50 @@ export default function ProspectosPage() {
   const [currentStep, setCurrentStep] = useState<AnalysisStep>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfStoragePath, setPdfStoragePath] = useState<string | null>(null);
+  const [pdfUploading, setPdfUploading] = useState(false);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePdfSelect = async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast.error('Solo se aceptan archivos PDF');
+      return;
+    }
+    if (file.size > 30 * 1024 * 1024) {
+      toast.error('El PDF no puede superar 30MB');
+      return;
+    }
+    setPdfFile(file);
+    setPdfStoragePath(null);
+    setPdfUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No autenticado');
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = `${user.id}/${Date.now()}_${safeName}`;
+      const { data, error } = await supabase.storage
+        .from('prospect-documents')
+        .upload(filePath, file, { upsert: true });
+      if (error) throw error;
+      setPdfStoragePath(data.path);
+      toast.success('Documento cargado');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'desconocido';
+      toast.error('Error al cargar el documento: ' + msg);
+      setPdfFile(null);
+    } finally {
+      setPdfUploading(false);
+    }
+  };
+
+  const handleRemovePdf = () => {
+    setPdfFile(null);
+    setPdfStoragePath(null);
   };
 
   const getStepProgress = (step: AnalysisStep): number => {
@@ -98,7 +141,10 @@ export default function ProspectosPage() {
       const response = await fetch('/api/prospects/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          ...(pdfStoragePath ? { document_storage_path: pdfStoragePath } : {}),
+        }),
       });
 
       clearInterval(progressInterval);
@@ -147,6 +193,8 @@ export default function ProspectosPage() {
     });
     setResult(null);
     setCurrentStep('idle');
+    setPdfFile(null);
+    setPdfStoragePath(null);
   };
 
   const getPriorityStyle = (priority: string | null) => {
@@ -307,6 +355,52 @@ export default function ProspectosPage() {
                 rows={3}
                 disabled={analyzing}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Documento del cliente (PDF opcional)</Label>
+              <p className="text-xs text-[#6B6B6B]">
+                Sube una presentación o diagrama que te haya enviado el cliente. Los agentes lo analizarán como contexto.
+              </p>
+              {pdfFile ? (
+                <div className={`flex items-center gap-3 rounded-xl border p-3 ${pdfStoragePath ? 'border-[#AAD4AE] bg-[#D6EDD8]/30' : pdfUploading ? 'border-[#E5E5E5] bg-[#FAF9F7]' : 'border-red-200 bg-red-50'}`}>
+                  <FileText className={`h-5 w-5 shrink-0 ${pdfStoragePath ? 'text-[#3D7A4A]' : 'text-[#6B6B6B]'}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[#363536]">{pdfFile.name}</p>
+                    <p className="text-xs text-[#6B6B6B]">
+                      {pdfUploading ? 'Subiendo...' : pdfStoragePath ? 'Listo — el agente lo analizará' : 'Error al subir'}
+                    </p>
+                  </div>
+                  {!analyzing && !pdfUploading && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePdf}
+                      className="rounded p-1 text-[#6B6B6B] hover:text-[#363536]"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <label className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-[#E5E5E5] bg-[#FAF9F7] p-6 transition-colors ${analyzing ? 'cursor-not-allowed opacity-50' : 'hover:border-[#AAD4AE] hover:bg-[#F0EFED]'}`}>
+                  <Upload className="h-6 w-6 text-[#6B6B6B]" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-[#363536]">Subir presentación o diagrama</p>
+                    <p className="text-xs text-[#6B6B6B]">PDF hasta 30MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    disabled={analyzing}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handlePdfSelect(f);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              )}
             </div>
 
             <div className="flex items-start gap-3 rounded-xl border border-[#E5E5E5] bg-[#FAF9F7] p-4">

@@ -59,11 +59,28 @@ ${extra ? `\n${extra}\n` : ''}
 Genera el brief pre-llamada completo.
 `.trim();
 
+  const messageContent = input.document_base64
+    ? [
+        {
+          type: 'document' as const,
+          source: {
+            type: 'base64' as const,
+            media_type: 'application/pdf' as const,
+            data: input.document_base64,
+          },
+          title: 'Documento compartido por el prospecto',
+          context:
+            'El prospecto compartió este documento. Úsalo para enriquecer el brief con contexto sobre su operación y para formular preguntas de discovery más específicas y personalizadas.',
+        },
+        { type: 'text' as const, text: userPrompt },
+      ]
+    : userPrompt;
+
   const message = await anthropic.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: SYSTEM,
-    messages: [{ role: 'user', content: userPrompt }],
+    messages: [{ role: 'user', content: messageContent }],
   });
 
   return textFromMessage(message);
