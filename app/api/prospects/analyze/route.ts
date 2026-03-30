@@ -23,6 +23,8 @@ interface AnalyzeRequest {
   additional_context?: string;
   /** El prospecto solicitó la reunión/llamada (criterio de interés) */
   prospect_requested_call?: boolean;
+  /** Ruta en Supabase Storage del documento PDF subido por el prospecto */
+  document_storage_path?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -42,6 +44,24 @@ export async function POST(req: NextRequest) {
 
     if (!body.company_name?.trim()) {
       return NextResponse.json({ error: 'Company name is required' }, { status: 400 });
+    }
+
+    // Download client PDF document from Supabase Storage (if uploaded)
+    let document_base64: string | undefined;
+    if (body.document_storage_path) {
+      try {
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('prospect-documents')
+          .download(body.document_storage_path);
+        if (!fileError && fileData) {
+          const arrayBuffer = await fileData.arrayBuffer();
+          document_base64 = Buffer.from(arrayBuffer).toString('base64');
+        } else {
+          console.warn('Could not download prospect document:', fileError?.message);
+        }
+      } catch (e) {
+        console.warn('Prospect document download failed:', e);
+      }
     }
 
     let website_content_preview = '';
@@ -98,12 +118,14 @@ ${webData.content}
       additional_context: body.additional_context,
       prospect_requested_call_hint:
         typeof body.prospect_requested_call === 'boolean' ? body.prospect_requested_call : undefined,
+      document_base64,
     });
 
     const preCallBrief = await runPreCallBrief({
       prospect_intel_json: prospectIntelJson,
       company_name: body.company_name,
       additional_context: body.additional_context,
+      document_base64,
     });
 
     const coord = await runCoordinator({
