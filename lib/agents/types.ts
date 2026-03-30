@@ -66,6 +66,8 @@ export interface ProposalGeneratorInput {
   additional_context?: string;
   /** Objeciones, comentarios y aprendizajes del equipo (markdown) */
   sales_interaction_notes?: string;
+  /** Documento PDF del cliente (presentación, diagrama, etc.) en base64 */
+  document_base64?: string;
 }
 
 export interface CoordinatorOrchestratorInput {

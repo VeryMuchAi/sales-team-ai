@@ -184,11 +184,28 @@ ${salesNotes ? `\n${salesNotes}\n` : ''}
 Redacta la propuesta comercial completa.
 `.trim();
 
+  const messageContent = input.document_base64
+    ? [
+        {
+          type: 'document' as const,
+          source: {
+            type: 'base64' as const,
+            media_type: 'application/pdf' as const,
+            data: input.document_base64,
+          },
+          title: 'Documento del cliente',
+          context:
+            'El cliente compartió este documento (presentación, diagrama de flujo u otro material). Úsalo para personalizar el diagnóstico, la solución propuesta y los próximos pasos de la propuesta.',
+        },
+        { type: 'text' as const, text: userPrompt },
+      ]
+    : userPrompt;
+
   const message = await anthropic.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
     system: SYSTEM,
-    messages: [{ role: 'user', content: userPrompt }],
+    messages: [{ role: 'user', content: messageContent }],
   });
 
   return textFromMessage(message);

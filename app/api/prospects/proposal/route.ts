@@ -80,6 +80,35 @@ export async function POST(req: NextRequest) {
       prospect.prospect_learnings as string | null | undefined
     );
 
+    // Auto-fetch the most recent PDF presentation document uploaded by the team
+    let document_base64: string | undefined;
+    const { data: pdfDocs } = await supabase
+      .from('prospect_documents')
+      .select('storage_path, mime_type')
+      .eq('prospect_id', prospect_id)
+      .in('kind', ['presentation', 'other'])
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (pdfDocs?.length) {
+      const pdfDoc = pdfDocs.find(
+        (d) => d.mime_type === 'application/pdf' || d.storage_path?.toLowerCase().endsWith('.pdf')
+      );
+      if (pdfDoc) {
+        try {
+          const { data: fileData, error: fileErr } = await supabase.storage
+            .from('prospect-documents')
+            .download(pdfDoc.storage_path);
+          if (!fileErr && fileData) {
+            const arrayBuffer = await fileData.arrayBuffer();
+            document_base64 = Buffer.from(arrayBuffer).toString('base64');
+          }
+        } catch (e) {
+          console.warn('Could not load prospect PDF for proposal:', e);
+        }
+      }
+    }
+
     const proposal = await runProposalGenerator({
       prospect_intel_json: prospectIntelJson,
       pre_call_brief: preCallBriefText,
@@ -90,6 +119,7 @@ export async function POST(req: NextRequest) {
       additional_context:
         typeof prospect.additional_context === 'string' ? prospect.additional_context : undefined,
       sales_interaction_notes: salesNotes || undefined,
+      document_base64,
     });
 
     await supabase
