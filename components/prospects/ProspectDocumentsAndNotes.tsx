@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,6 @@ export function ProspectDocumentsAndNotes({
   onUseTranscriptForAnalysis,
 }: ProspectDocumentsAndNotesProps) {
   const supabase = useMemo(() => createClient(), []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [docs, setDocs] = useState<ProspectDocumentRow[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -182,13 +181,13 @@ export function ProspectDocumentsAndNotes({
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const list = e.target.files;
+    const list = Array.from(e.target.files ?? []);
     e.target.value = '';
-    if (!list?.length) return;
+    if (!list.length) return;
 
     setUploading(true);
     try {
-      for (const file of Array.from(list)) {
+      for (const file of list) {
         await uploadFile(file);
       }
       await loadDocuments();
@@ -339,20 +338,9 @@ export function ProspectDocumentsAndNotes({
               </Select>
             </div>
             <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="sr-only"
-                multiple
-                onChange={handleFileChange}
-                accept=".txt,.text,.md,.csv,.srt,.vtt,.pdf,.ppt,.pptx,.doc,.docx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="border-[#E5E5E5] text-[#363536]"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
+              <label
+                htmlFor="prospect-doc-upload"
+                className={`inline-flex cursor-pointer items-center rounded-md border border-[#E5E5E5] bg-background px-4 py-2 text-sm font-medium text-[#363536] shadow-sm transition-colors hover:bg-[#F0EFED] ${uploading ? 'pointer-events-none opacity-50' : ''}`}
               >
                 {uploading ? (
                   <>
@@ -365,7 +353,16 @@ export function ProspectDocumentsAndNotes({
                     Subir archivos
                   </>
                 )}
-              </Button>
+              </label>
+              <input
+                id="prospect-doc-upload"
+                type="file"
+                className="sr-only"
+                multiple
+                disabled={uploading}
+                onChange={handleFileChange}
+                accept=".txt,.text,.md,.csv,.srt,.vtt,.pdf,.ppt,.pptx,.doc,.docx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+              />
             </div>
           </div>
 
