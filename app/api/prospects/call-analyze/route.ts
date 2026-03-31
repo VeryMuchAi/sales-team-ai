@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const { data: prospect, error: pErr } = await supabase
       .from('prospects')
       .select(
-        'id, company_name, contact_name, additional_context, prospect_objections, prospect_comments, prospect_learnings'
+        'id, company_name, contact_name, additional_context, prospect_objections, prospect_comments, prospect_learnings, prospect_intel, pre_call_brief'
       )
       .eq('id', prospect_id)
       .single();
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Prospect not found' }, { status: 404 });
     }
 
-    const { data: latestResult, error: rErr } = await supabase
+    const { data: latestResult } = await supabase
       .from('agent_results')
       .select('research_output, analysis_output')
       .eq('prospect_id', prospect_id)
@@ -48,7 +48,15 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    if (rErr || !latestResult?.research_output?.trim() || !latestResult?.analysis_output?.trim()) {
+    // Prefer agent_results; fall back to data written directly to prospects (external pipeline)
+    const prospectIntelJson =
+      latestResult?.research_output?.trim() ||
+      (prospect.prospect_intel ? JSON.stringify(prospect.prospect_intel) : '');
+    const preCallBriefText =
+      latestResult?.analysis_output?.trim() ||
+      (typeof prospect.pre_call_brief === 'string' ? prospect.pre_call_brief : '');
+
+    if (!prospectIntelJson || !preCallBriefText) {
       return NextResponse.json(
         {
           success: false,
@@ -67,8 +75,8 @@ export async function POST(req: NextRequest) {
 
     const call_analysis = await runCallAnalyzer({
       transcript,
-      prospect_intel_json: latestResult.research_output,
-      pre_call_brief: latestResult.analysis_output,
+      prospect_intel_json: prospectIntelJson,
+      pre_call_brief: preCallBriefText,
       company_name: prospect.company_name,
       additional_context:
         typeof prospect.additional_context === 'string' ? prospect.additional_context : undefined,
@@ -83,6 +91,24 @@ export async function POST(req: NextRequest) {
         call_analysis: call_analysis,
       })
       .eq('id', prospect_id);
+
+    // Also persist as a session in prospect_call_sessions
+    const { count: sessionCount } = await supabase
+      .from('prospect_call_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('prospect_id', prospect_id);
+
+    const sessionNumber = (sessionCount ?? 0) + 1;
+
+    await supabase.from('prospect_call_sessions').insert({
+      prospect_id,
+      user_id: user.id,
+      session_number: sessionNumber,
+      session_label: `Llamada ${sessionNumber}`,
+      call_transcript: transcript,
+      call_analysis,
+      call_date: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,

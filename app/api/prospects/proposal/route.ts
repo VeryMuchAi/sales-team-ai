@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const { data: prospect, error: pErr } = await supabase
       .from('prospects')
       .select(
-        'id, company_name, contact_name, call_analysis, additional_context, prospect_objections, prospect_comments, prospect_learnings'
+        'id, company_name, contact_name, call_analysis, additional_context, prospect_objections, prospect_comments, prospect_learnings, prospect_intel, pre_call_brief'
       )
       .eq('id', prospect_id)
       .single();
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: latestResult, error: rErr } = await supabase
+    const { data: latestResult } = await supabase
       .from('agent_results')
       .select('research_output, analysis_output')
       .eq('prospect_id', prospect_id)
@@ -66,8 +66,16 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    if (rErr || !latestResult) {
-      return NextResponse.json({ success: false, error: 'Missing agent results for prospect' }, { status: 400 });
+    // Prefer agent_results; fall back to data written directly to prospects (external pipeline)
+    const prospectIntelJson =
+      latestResult?.research_output?.trim() ||
+      (prospect.prospect_intel ? JSON.stringify(prospect.prospect_intel) : '');
+    const preCallBriefText =
+      latestResult?.analysis_output?.trim() ||
+      (typeof prospect.pre_call_brief === 'string' ? prospect.pre_call_brief : '');
+
+    if (!prospectIntelJson || !preCallBriefText) {
+      return NextResponse.json({ success: false, error: 'Missing prior analysis (prospect intel + pre-call brief) for prospect' }, { status: 400 });
     }
 
     const salesNotes = formatSalesInteractionNotes(
@@ -82,8 +90,8 @@ export async function POST(req: NextRequest) {
       : 'USD';
 
     const proposal = await runProposalGenerator({
-      prospect_intel_json: latestResult.research_output ?? '',
-      pre_call_brief: latestResult.analysis_output ?? '',
+      prospect_intel_json: prospectIntelJson,
+      pre_call_brief: preCallBriefText,
       call_analysis: callAnalysis,
       company_name: prospect.company_name,
       contact_name: prospect.contact_name ?? undefined,

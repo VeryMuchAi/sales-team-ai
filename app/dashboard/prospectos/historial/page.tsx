@@ -34,6 +34,7 @@ interface ProspectWithResult {
   company_name: string;
   website_url: string | null;
   created_at: string;
+  prospect_intel: Record<string, unknown> | null;
   profiles?: Lead['profiles'];
   agent_results: {
     id: string;
@@ -57,7 +58,7 @@ export default function HistorialPage() {
     let query = supabase
       .from('prospects')
       .select(
-        'id, user_id, company_name, website_url, created_at, profiles(full_name, email), agent_results(id, icp_score, timing_score, priority, created_at)'
+        'id, user_id, company_name, website_url, created_at, prospect_intel, profiles(full_name, email), agent_results(id, icp_score, timing_score, priority, created_at)'
       )
       .order('created_at', { ascending: false });
 
@@ -73,7 +74,20 @@ export default function HistorialPage() {
       return;
     }
 
-    let filtered = (data || []) as ProspectWithResult[];
+    // Only show prospects that have meaningful data (removes failed/empty runs)
+    let filtered = ((data || []) as ProspectWithResult[]).filter(
+      (p) => p.agent_results.length > 0 || p.prospect_intel !== null
+    );
+
+    // Deduplicate by company_name: keep only the most recent entry per company.
+    // The query is ordered by created_at DESC, so first occurrence = most recent with data.
+    const seen = new Set<string>();
+    filtered = filtered.filter((p) => {
+      const key = p.company_name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     if (priorityFilter !== 'all') {
       filtered = filtered.filter(
@@ -141,23 +155,7 @@ export default function HistorialPage() {
     }
   };
 
-  const handleViewDetails = async (prospectId: string) => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('agent_results')
-      .select('*')
-      .eq('prospect_id', prospectId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error || !data) {
-      toast.error('No se encontraron resultados para este prospecto');
-      return;
-    }
-
-    // Store in session storage for the details page
-    sessionStorage.setItem('prospect-result', JSON.stringify(data));
+  const handleViewDetails = (prospectId: string) => {
     router.push(`/dashboard/prospectos/historial/${prospectId}`);
   };
 

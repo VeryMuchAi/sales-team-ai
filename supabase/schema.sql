@@ -354,7 +354,15 @@ grant execute on function public.is_email_whitelisted(text) to anon, authenticat
 -- ============================================================
 
 -- ============================================================
--- 13. Moneda de propuesta + feedback de mejoras (Proposal currency & learning)
+-- 13. Historial de llamadas por prospecto
+-- Ver migración completa: supabase/migrations/20260323_prospect_call_sessions.sql
+-- Tabla: prospect_call_sessions (una fila por transcripción + análisis)
+-- Permite múltiples llamadas por prospecto con sesiones numeradas.
+-- Migración incluye mover transcripts existentes de prospects.call_transcript.
+-- ============================================================
+
+-- ============================================================
+-- 14. Moneda de propuesta + feedback de mejoras (Proposal currency & learning)
 -- Ver migración completa: supabase/migrations/20260326_proposal_currency_and_feedback.sql
 -- Columna en prospects: proposal_currency (text, default 'USD') — USD | EUR | MXN | COP
 -- Tabla: proposal_feedback — almacena cada petición de mejora del equipo para que el agente

@@ -64,8 +64,11 @@ Determina el siguiente agente.
   }
 
   const extra = additionalContextBlock(input.additional_context);
+  const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const userPrompt = `
+**Fecha actual:** ${today}
+
 **Síntesis del pipeline (post Prospect Intel + Pre-Call Brief y/u otros pasos)**
 
 Empresa: ${input.company_name ?? ''}

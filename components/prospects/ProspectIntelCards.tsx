@@ -38,6 +38,18 @@ function parseIntel(raw: string): ProspectIntelResult | null {
 export function ProspectIntelCards({ raw }: { raw: string }) {
   const intel = parseIntel(raw);
 
+  if (!raw?.trim()) {
+    return (
+      <Card className="border-[#E5E5E5]">
+        <CardContent className="pt-6">
+          <p className="text-sm text-[#6B6B6B]">
+            No hay datos de Prospect Intel. Ejecuta un análisis inicial para generarlos.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!intel) {
     return (
       <Card className="border-[#E5E5E5]">

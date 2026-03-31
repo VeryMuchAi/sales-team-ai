@@ -34,12 +34,16 @@ export interface ProspectIntelInput {
   additional_context?: string;
   /** Si el equipo indica que el prospecto solicitó la reunión/llamada */
   prospect_requested_call_hint?: boolean;
+  /** Documento PDF del prospecto (presentación, diagrama, etc.) en base64 */
+  document_base64?: string;
 }
 
 export interface PreCallBriefInput {
   prospect_intel_json: string;
   company_name: string;
   additional_context?: string;
+  /** Documento PDF del prospecto en base64 (para extraer contexto adicional) */
+  document_base64?: string;
 }
 
 export interface CallAnalyzerInput {
