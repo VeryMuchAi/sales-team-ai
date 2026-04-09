@@ -1,0 +1,194 @@
+{
+  "name": "GHL Token Expiry Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "n1-schedule-trigger",
+      "name": "Daily Schedule (08:00 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read GHL token renewal date from N8N static data or environment variable.\n// TOKEN_RENEWED_AT should be set in N8N environment variables (or update manually after each renewal).\n// Format: ISO date string e.g. \"2026-03-01T00:00:00Z\"\n\nconst renewedAtStr = $env.GHL_TOKEN_RENEWED_AT ?? process.env.GHL_TOKEN_RENEWED_AT;\n\nif (!renewedAtStr) {\n  throw new Error('GHL_TOKEN_RENEWED_AT environment variable is not set in N8N. Set it to the ISO date of last token renewal.');\n}\n\nconst renewedAt = new Date(renewedAtStr);\nif (isNaN(renewedAt.getTime())) {\n  throw new Error(`GHL_TOKEN_RENEWED_AT value \"${renewedAtStr}\" is not a valid ISO date.`);\n}\n\nconst now = new Date();\nconst TOKEN_LIFETIME_DAYS = 90;\nconst expiresAt = new Date(renewedAt.getTime() + TOKEN_LIFETIME_DAYS * 24 * 60 * 60 * 1000);\nconst daysUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));\nconst daysSinceRenewal = Math.floor((now.getTime() - renewedAt.getTime()) / (24 * 60 * 60 * 1000));\n\n// Alert thresholds\nconst ALERT_DAY_75 = daysUntilExpiry <= 15; // 90 - 75 = 15 days left\nconst ALERT_DAY_80 = daysUntilExpiry <= 10; // 90 - 80 = 10 days left\nconst ALERT_DAY_85 = daysUntilExpiry <= 5;  // 90 - 85 = 5 days left\nconst ALERT_EXPIRED = daysUntilExpiry <= 0;\n\nconst shouldAlert = ALERT_DAY_75;\n\nlet urgency = 'info';\nif (ALERT_EXPIRED) urgency = 'critical';\nelse if (ALERT_DAY_85) urgency = 'critical';\nelse if (ALERT_DAY_80) urgency = 'high';\nelse if (ALERT_DAY_75) urgency = 'medium';\n\nreturn [{\n  json: {\n    renewedAt: renewedAt.toISOString(),\n    expiresAt: expiresAt.toISOString(),\n    daysSinceRenewal,\n    daysUntilExpiry,\n    shouldAlert,\n    urgency,\n    ALERT_EXPIRED,\n    ALERT_DAY_85,\n    ALERT_DAY_80,\n    ALERT_DAY_75\n  }\n}];"
+      },
+      "id": "n2-calculate-expiry",
+      "name": "Calculate Days Until Expiry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldAlert }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n3-should-alert",
+      "name": "Should Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the Slack alert message based on urgency\nconst d = $input.first().json;\n\nlet emoji = ':warning:';\nlet urgencyLabel = 'Aviso';\n\nif (d.ALERT_EXPIRED) {\n  emoji = ':rotating_light:';\n  urgencyLabel = '🔴 CRÍTICO — TOKEN EXPIRADO';\n} else if (d.ALERT_DAY_85) {\n  emoji = ':rotating_light:';\n  urgencyLabel = '🔴 CRÍTICO — expira en ' + d.daysUntilExpiry + ' días';\n} else if (d.ALERT_DAY_80) {\n  emoji = ':exclamation:';\n  urgencyLabel = '🟠 URGENTE — expira en ' + d.daysUntilExpiry + ' días';\n} else {\n  emoji = ':warning:';\n  urgencyLabel = '🟡 AVISO — expira en ' + d.daysUntilExpiry + ' días';\n}\n\nconst message = `${emoji} *GHL Token Expiry Alert — ${urgencyLabel}*\n\n*GHL_LOCATION_API_KEY* vence pronto.\n\n• Renovado: ${new Date(d.renewedAt).toLocaleDateString('es-MX')}\n• Expira: ${new Date(d.expiresAt).toLocaleDateString('es-MX')}\n• Días restantes: *${d.daysUntilExpiry}*\n• Días transcurridos: ${d.daysSinceRenewal} / 90\n\n*Acción requerida:* Renovar el API key en GHL (Settings → API → Location Key) y actualizar la variable \`GHL_TOKEN_RENEWED_AT\` en N8N con la fecha de hoy.\n\n_Si ya fue renovado, actualiza \`GHL_TOKEN_RENEWED_AT\` para silenciar estas alertas._`;\n\nreturn [{ json: { message, urgency: d.urgency, daysUntilExpiry: d.daysUntilExpiry } }];"
+      },
+      "id": "n4-build-alert-message",
+      "name": "Build Alert Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#tech-alerts",
+        "text": "={{ $json.message }}",
+        "otherOptions": {}
+      },
+      "id": "n5-slack-alert",
+      "name": "Slack Alert #tech-alerts",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $('Build Alert Message').item.json.urgency }}",
+              "rightValue": "critical",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n6-is-critical",
+      "name": "Is Critical?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#general",
+        "text": ":rotating_light: *ACCIÓN URGENTE: GHL API Key expira en {{ $('Build Alert Message').item.json.daysUntilExpiry }} días*\n\nEl token de GoHighLevel está por expirar. Esto causará que la integración con sales-team-ai deje de funcionar.\n\nPlease renovar el token lo antes posible. Ver #tech-alerts para detalles.",
+        "otherOptions": {}
+      },
+      "id": "n7-slack-general-critical",
+      "name": "Critical Alert to #general",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// No-op: non-critical, already alerted in #tech-alerts\nreturn [{ json: { skipped: true } }];"
+      },
+      "id": "n8-non-critical-done",
+      "name": "Non-Critical Done",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// No alert needed today\nreturn [{ json: { status: 'ok', message: 'Token has more than 15 days remaining — no alert needed' } }];"
+      },
+      "id": "n9-no-alert-needed",
+      "name": "No Alert Needed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 500]
+    }
+  ],
+  "connections": {
+    "Daily Schedule (08:00 UTC)": {
+      "main": [
+        [{ "node": "Calculate Days Until Expiry", "type": "main", "index": 0 }]
+      ]
+    },
+    "Calculate Days Until Expiry": {
+      "main": [
+        [{ "node": "Should Alert?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Should Alert?": {
+      "main": [
+        [{ "node": "Build Alert Message", "type": "main", "index": 0 }],
+        [{ "node": "No Alert Needed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Alert Message": {
+      "main": [
+        [{ "node": "Slack Alert #tech-alerts", "type": "main", "index": 0 }]
+      ]
+    },
+    "Slack Alert #tech-alerts": {
+      "main": [
+        [{ "node": "Is Critical?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Is Critical?": {
+      "main": [
+        [{ "node": "Critical Alert to #general", "type": "main", "index": 0 }],
+        [{ "node": "Non-Critical Done", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveExecutionProgress": false
+  },
+  "staticData": null,
+  "meta": {},
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 1,
+  "tags": ["ghl", "monitoring", "phase-1"],
+  "_readme": {
+    "title": "Workflow 3: GHL Token Expiry Monitor",
+    "description": "Runs daily at 08:00 UTC. Checks days since GHL_LOCATION_API_KEY was last renewed. Alerts #tech-alerts at day 75 (15 days left), escalates to #general at day 85+.",
+    "alert_schedule": {
+      "day_75_plus": "🟡 Warning to #tech-alerts",
+      "day_80_plus": "🟠 Urgent to #tech-alerts",
+      "day_85_plus": "🔴 Critical to #tech-alerts + #general",
+      "day_90_expired": "🔴 Expired to #tech-alerts + #general"
+    },
+    "credentials_required": [
+      "Slack OAuth — for alerts to #tech-alerts and #general"
+    ],
+    "environment_variables": [
+      "GHL_TOKEN_RENEWED_AT — ISO date string of last manual token renewal (e.g. '2026-03-01T00:00:00Z'). UPDATE THIS after each renewal."
+    ],
+    "setup_steps": [
+      "1. Import this JSON into n8n.verymuch.ai",
+      "2. Set N8N environment variable GHL_TOKEN_RENEWED_AT to the date GHL_LOCATION_API_KEY was last renewed",
+      "3. Connect Slack credential",
+      "4. Activate the workflow",
+      "5. IMPORTANT: After every GHL token renewal, update GHL_TOKEN_RENEWED_AT to today's date"
+    ]
+  }
+}

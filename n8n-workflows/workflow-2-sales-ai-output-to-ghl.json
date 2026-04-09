@@ -1,0 +1,324 @@
+{
+  "name": "sales-team-ai Output → GHL",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales-ai-output",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "n1-webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "sales-ai-output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            {
+              "id": "cond-token",
+              "leftValue": "={{ $request.headers['x-internal-token'] }}",
+              "rightValue": "={{ $credentials.internalWebhookToken.value }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n2-validate-token",
+      "name": "Validate X-Internal-Token",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"unauthorized\" }",
+        "options": { "responseCode": 401 }
+      },
+      "id": "n3-reject-401",
+      "name": "Reject 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse sales-team-ai output payload\nconst body = $input.first().json.body ?? $input.first().json;\n\nif (!body.ghlOpportunityId || !body.ghlContactId || !body.outputType) {\n  throw new Error('Missing required fields: ghlOpportunityId, ghlContactId, outputType');\n}\n\nconst outputType = body.outputType;\nconst ghlOpportunityId = body.ghlOpportunityId;\nconst ghlContactId = body.ghlContactId;\nconst agentName = body.agentName ?? 'sales-team-ai';\nconst content = body.content ?? {};\nconst metadata = body.metadata ?? {};\nconst generatedAt = metadata.generatedAt ?? new Date().toISOString();\nconst runId = metadata.runId ?? '';\nconst confidence = metadata.confidence ? Math.round(metadata.confidence * 100) : null;\n\n// Format output type for display\nconst outputTypeDisplay = {\n  prospect_intel: 'Prospect Intel',\n  pre_call_brief: 'Pre-Call Brief',\n  call_analysis: 'Call Analysis',\n  proposal: 'Proposal'\n}[outputType] ?? outputType;\n\n// Build GHL note body\nconst noteDate = new Date(generatedAt).toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });\n\nlet noteLines = [\n  `[sales-team-ai | ${outputTypeDisplay}] ${noteDate}`,\n  ''\n];\n\nif (content.summary) noteLines.push(`**Resumen:** ${content.summary}`, '');\n\nif (content.keyInsights?.length) {\n  noteLines.push('**Insights clave:**');\n  content.keyInsights.forEach((i) => noteLines.push(`- ${i}`));\n  noteLines.push('');\n}\n\nif (content.suggestedTalkingPoints?.length) {\n  noteLines.push('**Puntos de conversación:**');\n  content.suggestedTalkingPoints.forEach((p) => noteLines.push(`- ${p}`));\n  noteLines.push('');\n}\n\nif (content.riskFlags?.length) {\n  noteLines.push('**Riesgos:**');\n  content.riskFlags.forEach((r) => noteLines.push(`- ${r}`));\n  noteLines.push('');\n}\n\nif (content.fullReport) {\n  noteLines.push('**Reporte completo:**', content.fullReport.substring(0, 800));\n  if (content.fullReport.length > 800) noteLines.push('_(truncado — ver sistema)_');\n  noteLines.push('');\n}\n\nnoteLines.push(`_Generado automáticamente por Verymuch.ai Sales Intelligence${confidence ? ` (confianza: ${confidence}%)` : ''}. Run ID: ${runId}_`);\n\n// Tags per output type\nconst tagMap = {\n  prospect_intel: ['ai-intel-ready'],\n  pre_call_brief: ['ai-brief-generated', 'pre-call-ready'],\n  call_analysis: ['ai-call-analyzed'],\n  proposal: ['ai-proposal-generated']\n};\nconst tags = tagMap[outputType] ?? [];\n\n// Stage update rule: call_analysis → set stage to \"Demo Realizada\" if not already\nconst shouldUpdateStage = outputType === 'call_analysis';\nconst targetStage = 'Demo Realizada';\n\nreturn [{\n  json: {\n    ghlOpportunityId,\n    ghlContactId,\n    outputType,\n    agentName,\n    noteBody: noteLines.join('\\n'),\n    tags,\n    shouldUpdateStage,\n    targetStage,\n    confidence,\n    generatedAt,\n    runId,\n    outputTypeDisplay\n  }\n}];"
+      },
+      "id": "n4-parse-and-format",
+      "name": "Parse & Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.ghlContactId }}/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.goHighLevelApi.apiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Version", "value": "2021-07-28" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $json.noteBody }) }}",
+        "options": {}
+      },
+      "id": "n5-add-note",
+      "name": "Add Note to GHL Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $('Parse & Format Output').item.json.tags.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n6-has-tags",
+      "name": "Has Tags?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $('Parse & Format Output').item.json.ghlContactId }}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.goHighLevelApi.apiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Version", "value": "2021-07-28" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: $('Parse & Format Output').item.json.tags }) }}",
+        "options": {}
+      },
+      "id": "n7-add-tags",
+      "name": "Add Tags to GHL Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 200],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Parse & Format Output').item.json.ghlOpportunityId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.goHighLevelApi.apiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Version", "value": "2021-07-28" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customFields: [ { key: 'ai_last_output', value: $('Parse & Format Output').item.json.outputType }, { key: 'ai_last_run', value: $('Parse & Format Output').item.json.generatedAt }, { key: 'ai_confidence', value: String($('Parse & Format Output').item.json.confidence ?? '') }, { key: 'ai_status', value: 'completed' } ] }) }}",
+        "options": {}
+      },
+      "id": "n8-update-opportunity-fields",
+      "name": "Update Opportunity Custom Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $('Parse & Format Output').item.json.shouldUpdateStage }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n9-should-update-stage",
+      "name": "Update Stage?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/opportunities/{{ $('Parse & Format Output').item.json.ghlOpportunityId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.goHighLevelApi.apiKey }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Version", "value": "2021-07-28" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ stageId: $('Parse & Format Output').item.json.targetStage }) }}",
+        "options": {}
+      },
+      "id": "n10-update-stage",
+      "name": "Update GHL Stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 200],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"accepted\", \"processed\": true }",
+        "options": { "responseCode": 200 }
+      },
+      "id": "n11-respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "errorMessage": "GHL API update failed after retries"
+      },
+      "id": "n12-error-trigger",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [900, 500]
+    },
+    {
+      "parameters": {
+        "channel": "#tech-alerts",
+        "text": ":x: *sales-team-ai Output → GHL Failure*\n\nOpportunity: `{{ $('Parse & Format Output').item.json.ghlOpportunityId ?? 'unknown' }}`\nOutput Type: `{{ $('Parse & Format Output').item.json.outputType ?? 'unknown' }}`\nError: {{ $json.error?.message ?? 'Unknown error' }}\nTimestamp: {{ new Date().toISOString() }}\n\nRevisa N8N execution logs.",
+        "otherOptions": {}
+      },
+      "id": "n13-slack-error-alert",
+      "name": "Slack Error Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1120, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [{ "node": "Validate X-Internal-Token", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate X-Internal-Token": {
+      "main": [
+        [{ "node": "Parse & Format Output", "type": "main", "index": 0 }],
+        [{ "node": "Reject 401", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse & Format Output": {
+      "main": [
+        [{ "node": "Add Note to GHL Contact", "type": "main", "index": 0 }]
+      ]
+    },
+    "Add Note to GHL Contact": {
+      "main": [
+        [{ "node": "Has Tags?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Tags?": {
+      "main": [
+        [{ "node": "Add Tags to GHL Contact", "type": "main", "index": 0 }],
+        [{ "node": "Update Opportunity Custom Fields", "type": "main", "index": 0 }]
+      ]
+    },
+    "Add Tags to GHL Contact": {
+      "main": [
+        [{ "node": "Update Opportunity Custom Fields", "type": "main", "index": 0 }]
+      ]
+    },
+    "Update Opportunity Custom Fields": {
+      "main": [
+        [{ "node": "Update Stage?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Update Stage?": {
+      "main": [
+        [{ "node": "Update GHL Stage", "type": "main", "index": 0 }],
+        [{ "node": "Respond 200 OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Update GHL Stage": {
+      "main": [
+        [{ "node": "Respond 200 OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [{ "node": "Slack Error Alert", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveExecutionProgress": true
+  },
+  "staticData": null,
+  "meta": {},
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 1,
+  "tags": ["ghl", "sales-team-ai", "phase-1"],
+  "_readme": {
+    "title": "Workflow 2: sales-team-ai Output → GHL",
+    "description": "Receives output from sales-team-ai agents, formats note, adds note + tags to GHL contact, updates opportunity custom fields, and conditionally updates stage.",
+    "credentials_required": [
+      "internalWebhookToken — X-Internal-Token for inbound validation (INTERNAL_WEBHOOK_TOKEN)",
+      "goHighLevelApi — GHL Location API Key (GHL_LOCATION_API_KEY)",
+      "Slack OAuth — for #tech-alerts notifications"
+    ],
+    "setup_steps": [
+      "1. Import this JSON into n8n.verymuch.ai",
+      "2. Create HTTP Header Auth credential 'Internal Webhook Token' with value = INTERNAL_WEBHOOK_TOKEN",
+      "3. Create GoHighLevel API credential with GHL_LOCATION_API_KEY",
+      "4. Connect Slack credential",
+      "5. Activate the workflow — webhook URL: https://n8n.verymuch.ai/webhook/sales-ai-output",
+      "6. In sales-team-ai: POST to that URL with X-Internal-Token header after agent completes"
+    ]
+  }
+}

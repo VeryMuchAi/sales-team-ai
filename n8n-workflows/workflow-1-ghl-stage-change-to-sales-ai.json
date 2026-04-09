@@ -1,0 +1,380 @@
+{
+  "name": "GHL Stage Change → sales-team-ai",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghl-inbound",
+        "authentication": "headerAuth",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "n1-webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "ghl-inbound"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-secret",
+              "leftValue": "={{ $request.headers['x-webhook-secret'] }}",
+              "rightValue": "={{ $credentials.headerAuthCredentials.value }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "n2-validate-secret",
+      "name": "Validate X-Webhook-Secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"unauthorized\", \"message\": \"Invalid webhook secret\" }",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "n3-reject-401",
+      "name": "Reject 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and extract fields from GHL webhook payload\nconst body = $input.first().json.body ?? $input.first().json;\n\nconst opportunityId = body.opportunityId ?? body.opportunity_id ?? '';\nconst contactId = body.contactId ?? body.contact_id ?? '';\nconst stageName = body.stageName ?? body.stage_name ?? body.pipelineStageName ?? '';\nconst previousStageName = body.previousStageName ?? body.previous_stage ?? '';\nconst locationId = body.locationId ?? '';\nconst pipelineId = body.pipelineId ?? '';\nconst dealValue = parseFloat(body.dealValue ?? body.monetaryValue ?? '0') || 0;\nconst assignedTo = body.assignedTo ?? body.assignedUserId ?? '';\nconst contactName = body.contactName ?? '';\nconst contactEmail = body.contactEmail ?? '';\nconst contactPhone = body.contactPhone ?? body.phone ?? '';\nconst companyName = body.companyName ?? '';\nconst timestamp = body.timestamp ?? body.dateAdded ?? new Date().toISOString();\n\nreturn [{\n  json: {\n    opportunityId,\n    contactId,\n    stageName,\n    previousStageName,\n    locationId,\n    pipelineId,\n    dealValue,\n    assignedTo,\n    contactName,\n    contactEmail,\n    contactPhone,\n    companyName,\n    timestamp,\n    rawBody: body\n  }\n}];"
+      },
+      "id": "n4-parse-payload",
+      "name": "Parse GHL Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [{ "leftValue": "={{ $json.stageName }}", "rightValue": "Prospect Identificado", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "prospect_intel"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [{ "leftValue": "={{ $json.stageName }}", "rightValue": "Demo Agendada", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pre_call_brief"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [{ "leftValue": "={{ $json.stageName }}", "rightValue": "Demo Realizada", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "call_analyzer"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [{ "leftValue": "={{ $json.stageName }}", "rightValue": "Propuesta Requerida", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "proposal_generator"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": false },
+                "conditions": [{ "leftValue": "={{ $json.stageName }}", "rightValue": "Cerrado Ganado", "operator": { "type": "string", "operation": "equals" } }],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "contract_summary"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "n5-stage-switch",
+      "name": "Stage → Workflow Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build normalized payload for sales-team-ai\nconst d = $input.first().json;\nconst workflowType = $('Stage → Workflow Switch').params.rules?.values\n  ? 'unknown'\n  : 'unknown';\n\nreturn [{\n  json: {\n    source: 'ghl',\n    eventType: 'stage_change',\n    deal: {\n      ghlOpportunityId: d.opportunityId,\n      ghlContactId: d.contactId,\n      currentStage: d.stageName,\n      previousStage: d.previousStageName,\n      pipeline: d.pipelineId,\n      value: d.dealValue,\n      contact: {\n        name: d.contactName,\n        email: d.contactEmail,\n        phone: d.contactPhone,\n        company: d.companyName\n      },\n      assignedUserId: d.assignedTo\n    },\n    triggerWorkflows: [],\n    timestamp: d.timestamp\n  }\n}];"
+      },
+      "id": "n6-transform-payload",
+      "name": "Transform Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sales-intelligence.verymuch.ai/api/webhook/ghl-stage-change",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $credentials.salesAiWebhookKey.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "n7-forward-to-sales-ai",
+      "name": "Forward to sales-team-ai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/{{ $('Parse GHL Payload').item.json.contactId }}/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.goHighLevelApi.apiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"body\": \"[sales-team-ai] Stage change automation triggered\\n\\nStage: {{ $('Parse GHL Payload').item.json.previousStageName }} → {{ $('Parse GHL Payload').item.json.stageName }}\\nTimestamp: {{ $('Parse GHL Payload').item.json.timestamp }}\\n\\nWorkflow triggered automatically by Verymuch.ai Sales Intelligence\" }",
+        "options": {}
+      },
+      "id": "n8-log-ghl-note",
+      "name": "Log GHL Contact Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"accepted\" }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "n9-respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"invalid_stage\", \"message\": \"Stage not mapped to any workflow\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "n10-respond-unmapped",
+      "name": "Respond Unmapped Stage",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 500]
+    },
+    {
+      "parameters": {
+        "errorMessage": "sales-team-ai did not respond after 3 retries"
+      },
+      "id": "n11-error-trigger",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [1340, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/{{ $('Parse GHL Payload').item.json.contactId }}/notes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.goHighLevelApi.apiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"body\": \"[Error] sales-team-ai no respondió — automatización fallida\\n\\nOpportunity: {{ $('Parse GHL Payload').item.json.opportunityId }}\\nStage: {{ $('Parse GHL Payload').item.json.stageName }}\\nTimestamp: {{ new Date().toISOString() }}\\n\\nRevisa #tech-alerts en Slack para más información.\" }",
+        "options": {}
+      },
+      "id": "n12-error-note-ghl",
+      "name": "Error Note in GHL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 500]
+    },
+    {
+      "parameters": {
+        "channel": "#tech-alerts",
+        "text": ":rotating_light: *sales-team-ai Webhook Failure*\n\nOpportunity `{{ $('Parse GHL Payload').item.json.opportunityId }}` — Stage: `{{ $('Parse GHL Payload').item.json.stageName }}`\nReason: sales-team-ai no respondió después de 3 intentos.\nTimestamp: {{ new Date().toISOString() }}\n\nRevisa N8N execution logs.",
+        "otherOptions": {}
+      },
+      "id": "n13-slack-alert",
+      "name": "Slack Alert #tech-alerts",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1780, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [{ "node": "Validate X-Webhook-Secret", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate X-Webhook-Secret": {
+      "main": [
+        [{ "node": "Parse GHL Payload", "type": "main", "index": 0 }],
+        [{ "node": "Reject 401", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse GHL Payload": {
+      "main": [
+        [{ "node": "Stage → Workflow Switch", "type": "main", "index": 0 }]
+      ]
+    },
+    "Stage → Workflow Switch": {
+      "main": [
+        [{ "node": "Transform Payload", "type": "main", "index": 0 }],
+        [{ "node": "Transform Payload", "type": "main", "index": 0 }],
+        [{ "node": "Transform Payload", "type": "main", "index": 0 }],
+        [{ "node": "Transform Payload", "type": "main", "index": 0 }],
+        [{ "node": "Transform Payload", "type": "main", "index": 0 }],
+        [{ "node": "Respond Unmapped Stage", "type": "main", "index": 0 }]
+      ]
+    },
+    "Transform Payload": {
+      "main": [
+        [{ "node": "Forward to sales-team-ai", "type": "main", "index": 0 }]
+      ]
+    },
+    "Forward to sales-team-ai": {
+      "main": [
+        [{ "node": "Log GHL Contact Note", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log GHL Contact Note": {
+      "main": [
+        [{ "node": "Respond 200 OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [{ "node": "Error Note in GHL", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Note in GHL": {
+      "main": [
+        [{ "node": "Slack Alert #tech-alerts", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "error-handler-sales-ai",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveExecutionProgress": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 1,
+  "tags": ["ghl", "sales-team-ai", "phase-1"],
+  "_readme": {
+    "title": "Workflow 1: GHL Stage Change → sales-team-ai",
+    "description": "Receives GHL opportunity.stageChanged webhook, validates secret, maps stage to workflow, and forwards to sales-team-ai coordinator.",
+    "credentials_required": [
+      "headerAuth (GHL_WEBHOOK_SECRET) — for incoming webhook validation",
+      "salesAiWebhookKey — API key for sales-intelligence.verymuch.ai (SALES_AI_WEBHOOK_KEY)",
+      "goHighLevelApi — GHL Location API Key (GHL_LOCATION_API_KEY)",
+      "Slack OAuth — for #tech-alerts notifications"
+    ],
+    "setup_steps": [
+      "1. Import this JSON into n8n.verymuch.ai",
+      "2. Create Header Auth credential named 'GHL Webhook Secret' with value = GHL_WEBHOOK_SECRET",
+      "3. Create HTTP Header Auth credential named 'Sales AI Webhook Key' for outbound calls",
+      "4. Create GoHighLevel API credential with GHL_LOCATION_API_KEY",
+      "5. Connect Slack credential",
+      "6. Activate the workflow — webhook URL: https://n8n.verymuch.ai/webhook/ghl-inbound",
+      "7. Configure GHL Workflow to POST to that URL with header X-Webhook-Secret"
+    ]
+  }
+}
