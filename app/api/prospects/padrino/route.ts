@@ -126,6 +126,12 @@ export async function POST(req: NextRequest) {
       console.warn('[padrino] failed to persist padrino_output', upErr.message);
     }
 
+    // Fire-and-forget push to GHL so the Padrino narrative appears on the
+    // contact card within seconds. Failures are swallowed inside the helper.
+    import('@/lib/integrations/ghl-trigger')
+      .then((m) => m.triggerGhlPush(body.prospect_id as string))
+      .catch((e) => console.warn('ghl push trigger load failed', e));
+
     return NextResponse.json({ success: true, padrino });
   } catch (err) {
     console.error('Padrino prospect route error:', err);

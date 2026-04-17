@@ -110,6 +110,12 @@ export async function POST(req: NextRequest) {
       call_date: new Date().toISOString(),
     });
 
+    // Fire-and-forget push to GHL so the call analysis lands in the contact
+    // card before the rep refreshes. Failures are swallowed inside the helper.
+    import('@/lib/integrations/ghl-trigger')
+      .then((m) => m.triggerGhlPush(prospect_id))
+      .catch((e) => console.warn('ghl push trigger load failed', e));
+
     return NextResponse.json({
       success: true,
       call_analysis,
