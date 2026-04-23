@@ -2,11 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Target, Settings, Sparkles } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Target,
+  Settings,
+  Sparkles,
+  GraduationCap,
+  LineChart,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/prospectos', label: 'Prospectos AI', icon: Sparkles },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
@@ -14,8 +22,19 @@ const navItems = [
   { href: '/dashboard/settings', label: 'Configuración', icon: Settings },
 ];
 
-export function Sidebar() {
+const founderNavItems = [
+  { href: '/hub/admin', label: 'Hub (Talento)', icon: GraduationCap },
+  { href: '/admin/okrs', label: 'OKRs', icon: LineChart },
+];
+
+interface SidebarProps {
+  /** Si true, muestra los links de founder (Hub admin + OKR center). */
+  isFounder?: boolean;
+}
+
+export function Sidebar({ isFounder = false }: SidebarProps) {
   const pathname = usePathname();
+  const navItems = isFounder ? [...baseNavItems, ...founderNavItems] : baseNavItems;
 
   return (
     <aside className="hidden w-64 flex-col border-r border-[#E5E5E5] bg-white md:flex">
