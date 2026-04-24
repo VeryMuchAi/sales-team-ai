@@ -2,7 +2,23 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/auth/whitelist';
 
+/**
+ * Host-based routing: cuando el visitante llega por `hub.verymuch.ai` a la
+ * raíz, redirigimos a `/hub` (la landing del talento) para que sea lo
+ * primero que ven. En el dominio principal, `/` sigue mostrando Sales
+ * Intelligence.
+ */
+const HUB_HOST = 'hub.verymuch.ai';
+
 export async function proxy(request: NextRequest) {
+  // Redirect: hub.verymuch.ai/ → hub.verymuch.ai/hub
+  const host = request.headers.get('host') ?? '';
+  if (host === HUB_HOST && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/hub';
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -67,5 +83,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/signup'],
+  // `/` para el redirect host-based hub.verymuch.ai → /hub
+  // El resto son los matchers originales de auth (dashboard, login, signup)
+  matcher: ['/', '/dashboard/:path*', '/login', '/signup'],
 };
