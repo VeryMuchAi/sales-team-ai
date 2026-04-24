@@ -9,9 +9,9 @@ import type { Metadata } from 'next';
  * mapea a app/hub/(public)/apply/page.tsx.
  */
 export const metadata: Metadata = {
-  title: 'Verymuch.ai Hub · Claude Certified Architect Program',
+  title: 'Verymuch.ai Hub · Talento Claude certificado',
   description:
-    'Red de talento certificado en Claude. Aplica, certifícate y trabaja en proyectos gestionados por Verymuch.ai.',
+    'Emprendedores que construyen, no vendedores que prometen. Aplica al programa Claude Certified Architect bajo Verymuch.ai: certificación en 60 días, clientes gestionados, pago por hitos.',
 };
 
 export default function HubPublicLayout({

@@ -10,8 +10,12 @@ import {
   Check,
   X,
   Sparkles,
+  Utensils,
+  Stethoscope,
+  ShieldCheck,
 } from 'lucide-react';
 import { HubNav } from '@/components/hub/HubNav';
+import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
 
 /**
  * Landing pública del Verymuch.ai Hub.
@@ -89,24 +93,28 @@ export default function HubLandingPage() {
       {/* ============================ MANIFESTO ============================ */}
       <section className="border-y border-white/5 bg-[#0D0D0D]">
         <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <p className="font-[family-name:var(--font-jakarta)] text-2xl font-semibold leading-snug text-white md:text-3xl">
-            Hay una brecha.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
-            Empresas que necesitan construir con Claude.
+          <p className="font-[family-name:var(--font-jakarta)] text-3xl font-extrabold leading-[1.15] tracking-tight text-white md:text-5xl">
+            Emprendedores que construyen,
             <br />
-            Freelancers que saben hacerlo pero no quieren vender.
+            <span className="text-[#AAD4AE]">
+              no vendedores que prometen.
+            </span>
           </p>
+
           <div className="my-10 flex items-center justify-center">
             <div className="h-px w-16 bg-gradient-to-r from-transparent via-[#AAD4AE]/50 to-transparent" />
           </div>
-          <p className="font-[family-name:var(--font-jakarta)] text-2xl font-semibold leading-snug text-white md:text-3xl">
-            Nosotros la cerramos.
-          </p>
-          <p className="mt-4 text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
-            Verymuch.ai vende a los clientes.
+
+          <p className="text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
+            Queremos gente que ha puesto sistemas en producción.
             <br />
-            Tú construyes las soluciones.
+            Que prefiere cerrar un hito a vender una promesa.
+          </p>
+
+          <p className="mt-8 text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
+            Nosotros traemos a los clientes.
+            <br />
+            Tú los construyes.
             <br />
             <span className="text-[#AAD4AE]">Ambos ganamos.</span>
           </p>
@@ -134,8 +142,8 @@ export default function HubLandingPage() {
             },
             {
               icon: Briefcase,
-              title: 'Clientes gestionados',
-              body: 'No vendes. Nosotros traemos el cliente cerrado, con scope definido y alcance acordado.',
+              title: 'Proyectos en producción',
+              body: 'No vendes. Traemos el cliente cerrado, scope acordado, sistemas reales — no pilots que nadie usa.',
               accent: 'amber',
             },
             {
@@ -330,6 +338,65 @@ export default function HubLandingPage() {
         </div>
       </section>
 
+      {/* ============================ POR QUÉ VERYMUCH.AI ============================ */}
+      <section className="border-t border-white/5 bg-[#0D0D0D]">
+        <div className="mx-auto max-w-6xl px-6 py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+              Por qué Verymuch.ai
+            </h2>
+            <p className="mt-6 text-lg text-[#DDEAEE]/60">
+              Si vas a poner tu certificación bajo nuestra marca,
+              es razonable que sepas quiénes somos.
+            </p>
+          </div>
+
+          <div className="mt-16 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: Utensils,
+                title: 'Comemos nuestra propia comida',
+                body: 'Todo lo que vendemos lo usamos primero internamente. No recomendamos lo que no hemos construido.',
+              },
+              {
+                icon: Stethoscope,
+                title: 'Consultoría + implementación',
+                body: 'Primero diagnosticamos dónde hay dolor real. Luego implementamos donde más importa. Nada de propuestas genéricas.',
+              },
+              {
+                icon: ShieldCheck,
+                title: 'Garante del cliente',
+                body: 'Pago por hitos, supervisión de entregas. El cliente nunca está solo. Y tú tampoco.',
+              },
+            ].map(({ icon: Icon, title, body }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10"
+              >
+                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#AAD4AE]/20 bg-[#AAD4AE]/5 text-[#AAD4AE]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-[family-name:var(--font-jakarta)] text-xl font-bold text-white">
+                  {title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#DDEAEE]/60">
+                  {body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mx-auto mt-16 max-w-2xl text-center text-base italic leading-relaxed text-[#DDEAEE]/50 md:text-lg">
+            “Instalamos agentes de IA y sistemas de automatización para que
+            las empresas{' '}
+            <span className="text-[#AAD4AE] not-italic">
+              vendan más con menos fricción.
+            </span>
+            ”
+          </p>
+        </div>
+      </section>
+
       {/* ============================ FAQ ============================ */}
       <section id="faq" className="border-t border-white/5 bg-[#0D0D0D]">
         <div className="mx-auto max-w-3xl px-6 py-24">
@@ -435,24 +502,40 @@ export default function HubLandingPage() {
       </section>
 
       {/* ============================ FOOTER ============================ */}
-      <footer className="border-t border-white/5">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="flex flex-col items-center justify-between gap-4 text-xs text-[#DDEAEE]/40 md:flex-row">
-            <p>© 2026 Verymuch.ai · Construido en Madrid + CDMX</p>
-            <div className="flex items-center gap-6">
+      <footer className="border-t border-white/5 bg-[#0A0A0A]">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="grid gap-10 md:grid-cols-[1fr_auto]">
+            <div className="max-w-md">
+              <VerymuchLogo variant="dark" size="md" />
+              <p className="mt-5 text-sm leading-relaxed text-[#DDEAEE]/60">
+                Instalamos agentes de IA y sistemas de automatización
+                para que las empresas{' '}
+                <span className="text-[#DDEAEE]/90">
+                  vendan más con menos fricción.
+                </span>
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 text-sm md:items-end">
               <a
                 href="mailto:talento@verymuch.ai"
-                className="transition hover:text-[#DDEAEE]"
+                className="text-[#DDEAEE]/70 transition hover:text-white"
               >
                 talento@verymuch.ai
               </a>
               <a
                 href="https://verymuch.ai"
-                className="transition hover:text-[#DDEAEE]"
+                className="text-[#DDEAEE]/70 transition hover:text-white"
               >
                 verymuch.ai
               </a>
             </div>
+          </div>
+
+          <div className="mt-12 border-t border-white/5 pt-6">
+            <p className="text-xs text-[#DDEAEE]/40">
+              © 2026 Verymuch.ai · Construido en Madrid + CDMX
+            </p>
           </div>
         </div>
       </footer>

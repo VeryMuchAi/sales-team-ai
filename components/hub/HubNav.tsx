@@ -1,17 +1,16 @@
 import Link from 'next/link';
+import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
 
 /**
- * Nav del Hub público. Minimal, dark. Logo a la izquierda, CTA a la derecha.
+ * Nav del Hub público. Minimal, dark. Logo oficial a la izquierda, CTA a la derecha.
  * No incluye login — esa puerta está en /dashboard.
  */
 export function HubNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/hub" className="flex items-center gap-2">
-          <span className="font-[family-name:var(--font-jakarta)] text-lg font-extrabold tracking-tight text-white">
-            verymuch<span className="text-[#AAD4AE]">.ai</span>
-          </span>
+        <Link href="/hub" className="flex items-center gap-3">
+          <VerymuchLogo variant="dark" size="md" />
           <span className="hidden rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#DDEAEE]/60 sm:inline">
             Hub
           </span>
