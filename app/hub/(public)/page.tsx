@@ -566,10 +566,10 @@ export default function HubLandingPage() {
 
             <div className="flex flex-col gap-2 text-sm md:items-end">
               <a
-                href="mailto:talento@verymuch.ai"
+                href="mailto:info@verymuch.ai"
                 className="text-[#DDEAEE]/70 transition hover:text-white"
               >
-                talento@verymuch.ai
+                info@verymuch.ai
               </a>
               <a
                 href="https://verymuch.ai"
