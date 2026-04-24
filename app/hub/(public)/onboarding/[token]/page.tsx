@@ -16,11 +16,11 @@ export default async function HubOnboardingPage({
       </h1>
       <p className="mb-6 text-[#DDEAEE]/70">
         Shell Fase 1 · token recibido:{' '}
-        <code className="rounded bg-[#141414] px-2 py-0.5 font-mono text-xs text-[#AAD4AE]">
+        <code className="rounded bg-[#1a1a1a] px-2 py-0.5 font-mono text-xs text-[#AAD4AE]">
           {token.slice(0, 12)}…
         </code>
       </p>
-      <div className="rounded-xl border border-[#DDEAEE]/10 bg-[#141414] p-6 text-sm text-[#DDEAEE]/60">
+      <div className="rounded-xl border border-[#DDEAEE]/10 bg-[#1a1a1a] p-6 text-sm text-[#DDEAEE]/60">
         Fase 3 incluirá: verificación del token, firma del Acuerdo de Talento
         Certificado, firma del NDA, confirmación de email asignado y activación
         del perfil.

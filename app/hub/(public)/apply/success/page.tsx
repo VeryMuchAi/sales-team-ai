@@ -39,7 +39,7 @@ export default async function HubApplySuccessPage({
         )}
 
         <div className="relative grid w-full gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/5 bg-[#141414] p-5 text-left">
+          <div className="rounded-xl border border-white/5 bg-[#1a1a1a] p-5 text-left">
             <Mail className="mb-3 h-5 w-5 text-[#AAD4AE]" />
             <h3 className="font-[family-name:var(--font-jakarta)] text-sm font-bold text-white">
               Revisa tu email
@@ -48,7 +48,7 @@ export default async function HubApplySuccessPage({
               Te enviaremos un correo de confirmación en los próximos minutos.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/5 bg-[#141414] p-5 text-left">
+          <div className="rounded-xl border border-white/5 bg-[#1a1a1a] p-5 text-left">
             <Clock className="mb-3 h-5 w-5 text-[#F5A05E]" />
             <h3 className="font-[family-name:var(--font-jakarta)] text-sm font-bold text-white">
               Respuesta en 5 días hábiles
@@ -61,7 +61,7 @@ export default async function HubApplySuccessPage({
 
         <Link
           href="/hub"
-          className="relative rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
+          className="relative rounded-lg border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
         >
           Volver al Hub
         </Link>

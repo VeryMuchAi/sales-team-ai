@@ -414,7 +414,7 @@ export function ApplicationForm() {
       </FormSection>
 
       {/* ========== SUBMIT ========== */}
-      <div className="rounded-2xl border border-white/10 bg-[#141414] p-6">
+      <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-6">
         <p className="mb-5 text-sm leading-relaxed text-[#DDEAEE]/60">
           Al enviar, confirmas que la información es veraz. Te responderemos
           en máximo 5 días hábiles al email que diste arriba.
@@ -422,7 +422,7 @@ export function ApplicationForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#AAD4AE] px-8 py-4 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="group inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#AAD4AE] px-8 py-4 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {submitting ? (
             <>
@@ -454,7 +454,7 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#141414] p-6 md:p-8">
+    <section className="rounded-xl border border-white/10 bg-[#1a1a1a] p-6 md:p-8">
       <div className="mb-6 flex items-start gap-4 border-b border-white/5 pb-5">
         <div className="font-[family-name:var(--font-jakarta)] text-2xl font-extrabold text-[#AAD4AE]/40">
           {number}
@@ -543,7 +543,7 @@ function ChipGroup({
 /** Base class para inputs — consistente en todo el form. */
 function inputClass(error?: string) {
   return (
-    'w-full rounded-lg border bg-[#0A0A0A] px-4 py-2.5 text-sm text-white placeholder:text-[#DDEAEE]/30 focus:outline-none focus:ring-2 ' +
+    'w-full rounded-lg border bg-[#0f0f0f] px-4 py-2.5 text-sm text-white placeholder:text-[#DDEAEE]/30 focus:outline-none focus:ring-2 ' +
     (error
       ? 'border-[#F5A05E]/50 focus:ring-[#F5A05E]/30'
       : 'border-white/10 focus:border-[#AAD4AE]/50 focus:ring-[#AAD4AE]/20')

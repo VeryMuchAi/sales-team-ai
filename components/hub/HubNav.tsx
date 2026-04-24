@@ -7,7 +7,7 @@ import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
  */
 export function HubNav() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0f0f0f]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link href="/hub" className="flex items-center gap-3">
           <VerymuchLogo variant="dark" size="md" />
@@ -31,7 +31,7 @@ export function HubNav() {
           </a>
           <Link
             href="/hub/apply"
-            className="rounded-full bg-[#AAD4AE] px-5 py-2 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
+            className="rounded-lg bg-[#AAD4AE] px-5 py-2 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
           >
             Aplicar
           </Link>

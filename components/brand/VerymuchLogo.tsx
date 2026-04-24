@@ -1,33 +1,59 @@
-import Image from 'next/image';
-
 /**
- * Logo oficial de Verymuch.ai.
+ * Logo oficial de Verymuch.ai construido inline (no PNG).
  *
- * Usa el asset oficial de `/public/logo.png` directamente vía next/image.
- * Reemplaza la implementación previa CSS-inline para garantizar fidelidad
- * 100% con el manual de marca.
+ * Wordmark "Verymuch." en Plus Jakarta Sans ExtraBold + box "Ai" con
+ * gradiente BRAND oficial del manual (mint #AAD4AE → ice #DDEAEE → amber
+ * #F5A05E).
  *
- * Aspect ratio del asset: 140 × 36 = ~3.89:1
+ * El texto "Verymuch." adapta color según `variant`:
+ *  - dark  → blanco (sobre fondos oscuros tipo #0A0A0A)
+ *  - light → charcoal #363536 (sobre fondos claros)
  *
- * Variante `dark`: el logo oficial tiene texto charcoal que no contrasta
- * sobre fondos oscuros. Lo envolvemos en un badge con fondo cream
- * (#FAF9F7, color oficial de marca) para mantener legibilidad sin alterar
- * el logo en sí.
+ * El box "Ai" mantiene siempre el mismo gradiente (los colores del gradiente
+ * funcionan sobre ambos backgrounds).
  */
 
 type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
 type LogoVariant = 'light' | 'dark';
 
-const ASPECT_RATIO = 140 / 36;
-
 const SIZES: Record<
   LogoSize,
-  { height: number; darkPad: string; darkRounded: string }
+  {
+    text: string;
+    box: string;
+    pad: string;
+    gap: string;
+    rounded: string;
+  }
 > = {
-  sm: { height: 22, darkPad: 'px-2 py-1', darkRounded: 'rounded-md' },
-  md: { height: 28, darkPad: 'px-2.5 py-1.5', darkRounded: 'rounded-lg' },
-  lg: { height: 42, darkPad: 'px-3 py-2', darkRounded: 'rounded-xl' },
-  xl: { height: 56, darkPad: 'px-4 py-2.5', darkRounded: 'rounded-2xl' },
+  sm: {
+    text: 'text-base',
+    box: 'text-xs',
+    pad: 'px-1.5 py-0.5',
+    gap: 'gap-1',
+    rounded: 'rounded-md',
+  },
+  md: {
+    text: 'text-xl',
+    box: 'text-sm',
+    pad: 'px-2 py-1',
+    gap: 'gap-1.5',
+    rounded: 'rounded-md',
+  },
+  lg: {
+    text: 'text-3xl',
+    box: 'text-xl',
+    pad: 'px-2.5 py-1',
+    gap: 'gap-2',
+    rounded: 'rounded-lg',
+  },
+  xl: {
+    text: 'text-5xl',
+    box: 'text-3xl',
+    pad: 'px-3 py-1.5',
+    gap: 'gap-2.5',
+    rounded: 'rounded-lg',
+  },
 };
 
 export function VerymuchLogo({
@@ -39,31 +65,25 @@ export function VerymuchLogo({
   size?: LogoSize;
   className?: string;
 }) {
-  const { height, darkPad, darkRounded } = SIZES[size];
-  const width = Math.round(height * ASPECT_RATIO);
-
-  const img = (
-    <Image
-      src="/logo.png"
-      alt="Verymuch.Ai"
-      width={width}
-      height={height}
-      className="object-contain"
-      priority
-    />
-  );
-
-  if (variant === 'dark') {
-    return (
-      <span
-        className={`inline-flex items-center bg-[#FAF9F7] ${darkPad} ${darkRounded} ${className}`}
-      >
-        {img}
-      </span>
-    );
-  }
+  const s = SIZES[size];
+  const wordmarkColor =
+    variant === 'dark' ? 'text-white' : 'text-[#363536]';
 
   return (
-    <span className={`inline-flex items-center ${className}`}>{img}</span>
+    <span
+      aria-label="Verymuch.Ai"
+      className={`inline-flex items-center leading-none ${s.gap} ${className}`}
+    >
+      <span
+        className={`font-[family-name:var(--font-jakarta)] font-extrabold tracking-tight ${s.text} ${wordmarkColor}`}
+      >
+        Verymuch.
+      </span>
+      <span
+        className={`font-[family-name:var(--font-jakarta)] font-extrabold text-[#1a1a1a] bg-[linear-gradient(90deg,#AAD4AE_0%,#DDEAEE_50%,#F5A05E_100%)] ${s.box} ${s.pad} ${s.rounded}`}
+      >
+        Ai
+      </span>
+    </span>
   );
 }

@@ -20,6 +20,6 @@ export default function HubPublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#DDEAEE]">{children}</div>
+    <div className="min-h-screen bg-[#0f0f0f] text-[#DDEAEE]">{children}</div>
   );
 }

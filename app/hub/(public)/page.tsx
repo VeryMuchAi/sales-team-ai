@@ -21,16 +21,17 @@ import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
 
 /**
  * Landing pública del Verymuch.ai Hub.
- * Server component, dark mode, brand: mint + amber sobre #0A0A0A.
+ * Server component, dark mode, alineado visualmente con www.verymuch.ai:
+ *  - Fondo #0f0f0f (match con main site)
+ *  - Botones rounded-lg (no pill)
+ *  - Cards rounded-xl (moderado)
+ *  - Titulares white sólido, sin text-gradient
+ *  - Glows decorativos sutiles
  *
  * Reenfoque (commit: realign copy to real talent pains):
  *  El Hub NO es un canal de adquisición de clientes. Es un programa de
  *  certificación + comunidad + contexto técnico para talento que ya
  *  construye. El pipeline de proyectos es una consecuencia, no el producto.
- *
- * Secciones: hero · manifiesto + 3 dolores · beneficios (reordenados) ·
- *            cómo funciona · para quién es/no es · por qué Verymuch.ai ·
- *            FAQ · CTA final · footer.
  */
 export default function HubLandingPage() {
   return (
@@ -39,10 +40,9 @@ export default function HubLandingPage() {
 
       {/* ============================ HERO ============================ */}
       <section className="relative overflow-hidden">
-        {/* Mint glow top-left */}
-        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#AAD4AE]/20 blur-3xl" />
-        {/* Amber glow bottom-right */}
-        <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#F5A05E]/10 blur-3xl" />
+        {/* Glows sutiles (alineados al look minimalist de verymuch.ai) */}
+        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-[#AAD4AE]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#F5A05E]/[0.06] blur-3xl" />
 
         <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
           <div className="mx-auto max-w-4xl text-center">
@@ -54,9 +54,7 @@ export default function HubLandingPage() {
             <h1 className="font-[family-name:var(--font-jakarta)] text-5xl font-extrabold leading-[1.05] tracking-tight text-white md:text-7xl">
               Construir solo
               <br />
-              <span className="bg-gradient-to-r from-[#AAD4AE] to-[#DDEAEE] bg-clip-text text-transparent">
-                tiene techo.
-              </span>
+              <span className="text-[#AAD4AE]">tiene techo.</span>
             </h1>
 
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
@@ -69,14 +67,14 @@ export default function HubLandingPage() {
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/hub/apply"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#AAD4AE] px-7 py-3.5 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
+                className="group inline-flex items-center gap-2 rounded-lg bg-[#AAD4AE] px-7 py-3.5 text-sm font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
               >
                 Aplicar al programa
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/5"
               >
                 Cómo funciona
               </a>
@@ -101,7 +99,7 @@ export default function HubLandingPage() {
       </section>
 
       {/* ======================== MANIFIESTO + 3 DOLORES ======================== */}
-      <section className="border-y border-white/5 bg-[#0D0D0D]">
+      <section className="border-y border-white/5 bg-[#141414]">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-[family-name:var(--font-jakarta)] text-3xl font-extrabold leading-[1.15] tracking-tight text-white md:text-5xl">
@@ -136,9 +134,9 @@ export default function HubLandingPage() {
             ].map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10"
+                className="rounded-xl border border-white/5 bg-[#1a1a1a] p-6 transition hover:border-white/10"
               >
-                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#F5A05E]/20 bg-[#F5A05E]/5 text-[#F5A05E]">
+                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#F5A05E]/20 bg-[#F5A05E]/5 text-[#F5A05E]">
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-[family-name:var(--font-jakarta)] text-xl font-bold text-white">
@@ -222,10 +220,10 @@ export default function HubLandingPage() {
             return (
               <div
                 key={title}
-                className="group rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10 hover:bg-[#171717]"
+                className="group rounded-xl border border-white/5 bg-[#1a1a1a] p-6 transition hover:border-white/10"
               >
                 <div
-                  className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border ${accentClasses}`}
+                  className={`mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg border ${accentClasses}`}
                 >
                   <Icon className="h-5 w-5" />
                 </div>
@@ -244,7 +242,7 @@ export default function HubLandingPage() {
       {/* ============================ CÓMO FUNCIONA ============================ */}
       <section
         id="como-funciona"
-        className="border-y border-white/5 bg-[#0D0D0D]"
+        className="border-y border-white/5 bg-[#141414]"
       >
         <div className="mx-auto max-w-4xl px-6 py-24">
           <div className="mx-auto max-w-2xl text-center">
@@ -297,7 +295,7 @@ export default function HubLandingPage() {
             ].map(({ num, title, time, body }) => (
               <li
                 key={num}
-                className="flex gap-6 rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10"
+                className="flex gap-6 rounded-xl border border-white/5 bg-[#1a1a1a] p-6 transition hover:border-white/10"
               >
                 <div className="flex-shrink-0">
                   <div className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold text-[#AAD4AE]/30">
@@ -336,7 +334,7 @@ export default function HubLandingPage() {
         </div>
 
         <div className="mt-16 grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-[#AAD4AE]/20 bg-[#AAD4AE]/5 p-8">
+          <div className="rounded-xl border border-[#AAD4AE]/20 bg-[#AAD4AE]/5 p-8">
             <h3 className="mb-6 font-[family-name:var(--font-jakarta)] text-2xl font-bold text-white">
               Sí, si…
             </h3>
@@ -358,7 +356,7 @@ export default function HubLandingPage() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-[#F5A05E]/20 bg-[#F5A05E]/5 p-8">
+          <div className="rounded-xl border border-[#F5A05E]/20 bg-[#F5A05E]/5 p-8">
             <h3 className="mb-6 font-[family-name:var(--font-jakarta)] text-2xl font-bold text-white">
               No, si…
             </h3>
@@ -382,7 +380,7 @@ export default function HubLandingPage() {
       </section>
 
       {/* ============================ POR QUÉ VERYMUCH.AI ============================ */}
-      <section className="border-t border-white/5 bg-[#0D0D0D]">
+      <section className="border-t border-white/5 bg-[#141414]">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold tracking-tight text-white md:text-5xl">
@@ -414,9 +412,9 @@ export default function HubLandingPage() {
             ].map(({ icon: Icon, title, body }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10"
+                className="rounded-xl border border-white/5 bg-[#1a1a1a] p-6 transition hover:border-white/10"
               >
-                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#AAD4AE]/20 bg-[#AAD4AE]/5 text-[#AAD4AE]">
+                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#AAD4AE]/20 bg-[#AAD4AE]/5 text-[#AAD4AE]">
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-[family-name:var(--font-jakarta)] text-xl font-bold text-white">
@@ -441,7 +439,7 @@ export default function HubLandingPage() {
       </section>
 
       {/* ============================ FAQ ============================ */}
-      <section id="faq" className="border-t border-white/5 bg-[#0D0D0D]">
+      <section id="faq" className="border-t border-white/5 bg-[#141414]">
         <div className="mx-auto max-w-3xl px-6 py-24">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold tracking-tight text-white md:text-5xl">
@@ -490,7 +488,7 @@ export default function HubLandingPage() {
             ].map(({ q, a }) => (
               <details
                 key={q}
-                className="group rounded-xl border border-white/5 bg-[#141414] transition hover:border-white/10 open:border-[#AAD4AE]/20 open:bg-[#141414]"
+                className="group rounded-xl border border-white/5 bg-[#1a1a1a] transition hover:border-white/10 open:border-[#AAD4AE]/20"
               >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-left">
                   <span className="font-[family-name:var(--font-jakarta)] text-base font-semibold text-white md:text-lg">
@@ -524,9 +522,9 @@ export default function HubLandingPage() {
 
       {/* ============================ CTA FINAL ============================ */}
       <section className="mx-auto max-w-4xl px-6 py-24">
-        <div className="relative overflow-hidden rounded-3xl border border-[#AAD4AE]/20 bg-gradient-to-br from-[#141414] to-[#1a1a1a] p-12 text-center md:p-16">
+        <div className="relative overflow-hidden rounded-2xl border border-[#AAD4AE]/20 bg-gradient-to-br from-[#1a1a1a] to-[#202020] p-12 text-center md:p-16">
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#AAD4AE]/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#F5A05E]/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#F5A05E]/[0.06] blur-3xl" />
 
           <div className="relative">
             <h2 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold leading-tight text-white md:text-5xl">
@@ -541,7 +539,7 @@ export default function HubLandingPage() {
             <div className="mt-10">
               <Link
                 href="/hub/apply"
-                className="group inline-flex items-center gap-2 rounded-full bg-[#AAD4AE] px-8 py-4 text-base font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
+                className="group inline-flex items-center gap-2 rounded-lg bg-[#AAD4AE] px-8 py-4 text-base font-semibold text-[#0A0A0A] transition hover:bg-[#96C49C]"
               >
                 Aplicar al programa
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
@@ -552,7 +550,7 @@ export default function HubLandingPage() {
       </section>
 
       {/* ============================ FOOTER ============================ */}
-      <footer className="border-t border-white/5 bg-[#0A0A0A]">
+      <footer className="border-t border-white/5 bg-[#0f0f0f]">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="grid gap-10 md:grid-cols-[1fr_auto]">
             <div className="max-w-md">
