@@ -1,22 +1,35 @@
-/**
- * Form de aplicación al programa Claude Certified Architect.
- * Shell en Fase 1 — el form completo con validación Zod + submit a
- * /api/hub/apply se construye en Fase 2.
- */
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { HubNav } from '@/components/hub/HubNav';
+import { ApplicationForm } from '@/components/hub/ApplicationForm';
+
 export default function HubApplyPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="mb-4 font-[family-name:var(--font-jakarta)] text-4xl font-extrabold text-white">
-        Aplicar al programa
-      </h1>
-      <p className="mb-8 text-[#DDEAEE]/70">
-        El formulario de aplicación se habilita en Fase 2.
-      </p>
-      <div className="rounded-xl border border-[#DDEAEE]/10 bg-[#141414] p-6 text-sm text-[#DDEAEE]/60">
-        Placeholder — Fase 2 incluye: datos personales, stack, disponibilidad,
-        resumen libre, validación, evaluación automática con Claude y email de
-        confirmación.
-      </div>
-    </main>
+    <>
+      <HubNav />
+      <main className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+        <Link
+          href="/hub"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-[#DDEAEE]/60 transition hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver al Hub
+        </Link>
+
+        <div className="mb-12">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#AAD4AE]/30 bg-[#AAD4AE]/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-[#AAD4AE]">
+            Aplicación
+          </div>
+          <h1 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold leading-tight tracking-tight text-white md:text-5xl">
+            Cuéntanos quién eres
+          </h1>
+          <p className="mt-4 max-w-xl text-lg text-[#DDEAEE]/60">
+            5 minutos. Respuesta en máximo 5 días hábiles. Si hay fit, arrancamos.
+          </p>
+        </div>
+
+        <ApplicationForm />
+      </main>
+    </>
   );
 }
