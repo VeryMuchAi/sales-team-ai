@@ -2,10 +2,6 @@ import Link from 'next/link';
 import {
   ArrowRight,
   Award,
-  Briefcase,
-  Coins,
-  Globe,
-  BookOpen,
   Users,
   Check,
   X,
@@ -13,6 +9,12 @@ import {
   Utensils,
   Stethoscope,
   ShieldCheck,
+  Server,
+  FileQuestion,
+  Hourglass,
+  ClipboardCheck,
+  AtSign,
+  Unlock,
 } from 'lucide-react';
 import { HubNav } from '@/components/hub/HubNav';
 import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
@@ -20,8 +22,15 @@ import { VerymuchLogo } from '@/components/brand/VerymuchLogo';
 /**
  * Landing pública del Verymuch.ai Hub.
  * Server component, dark mode, brand: mint + amber sobre #0A0A0A.
- * Secciones: hero · manifiesto · beneficios · cómo funciona ·
- *            para quién es/no es · FAQ · CTA final · footer.
+ *
+ * Reenfoque (commit: realign copy to real talent pains):
+ *  El Hub NO es un canal de adquisición de clientes. Es un programa de
+ *  certificación + comunidad + contexto técnico para talento que ya
+ *  construye. El pipeline de proyectos es una consecuencia, no el producto.
+ *
+ * Secciones: hero · manifiesto + 3 dolores · beneficios (reordenados) ·
+ *            cómo funciona · para quién es/no es · por qué Verymuch.ai ·
+ *            FAQ · CTA final · footer.
  */
 export default function HubLandingPage() {
   return (
@@ -43,17 +52,18 @@ export default function HubLandingPage() {
             </div>
 
             <h1 className="font-[family-name:var(--font-jakarta)] text-5xl font-extrabold leading-[1.05] tracking-tight text-white md:text-7xl">
-              Deja de perseguir clientes.
+              Construir solo
               <br />
               <span className="bg-gradient-to-r from-[#AAD4AE] to-[#DDEAEE] bg-clip-text text-transparent">
-                Constrúyelos.
+                tiene techo.
               </span>
             </h1>
 
             <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
-              El programa Claude Certified Architect bajo Verymuch.ai.
-              Certifícate en 60 días. Trabaja con clientes gestionados.
-              Cobra por hitos. Tú construyes, nosotros vendemos.
+              Si ya pones sistemas con Claude en producción y el siguiente
+              nivel técnico no llega leyendo docs de noche — este es tu grupo.
+              Certificación oficial Anthropic, code reviews con otros CCAs, y
+              proyectos con scope cerrado cuando haya match de stack.
             </p>
 
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -83,41 +93,73 @@ export default function HubLandingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#AAD4AE]" />
-                Pago por hitos
+                Equipo técnico detrás
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ============================ MANIFESTO ============================ */}
+      {/* ======================== MANIFIESTO + 3 DOLORES ======================== */}
       <section className="border-y border-white/5 bg-[#0D0D0D]">
-        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-          <p className="font-[family-name:var(--font-jakarta)] text-3xl font-extrabold leading-[1.15] tracking-tight text-white md:text-5xl">
-            Emprendedores que construyen,
-            <br />
-            <span className="text-[#AAD4AE]">
-              no vendedores que prometen.
-            </span>
-          </p>
-
-          <div className="my-10 flex items-center justify-center">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent via-[#AAD4AE]/50 to-transparent" />
+        <div className="mx-auto max-w-6xl px-6 py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="font-[family-name:var(--font-jakarta)] text-3xl font-extrabold leading-[1.15] tracking-tight text-white md:text-5xl">
+              Emprendedores que construyen,
+              <br />
+              <span className="text-[#AAD4AE]">
+                no vendedores que prometen.
+              </span>
+            </h2>
+            <p className="mt-6 text-lg leading-relaxed text-[#DDEAEE]/60 md:text-xl">
+              Pero construir solo tiene límites. Estos son los que conocemos.
+            </p>
           </div>
 
-          <p className="text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
-            Queremos gente que ha puesto sistemas en producción.
-            <br />
-            Que prefiere cerrar un hito a vender una promesa.
-          </p>
+          <div className="mt-16 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                icon: Server,
+                title: 'Construyes solo.',
+                body: 'Tu VPS, tus deploys, tus code reviews contigo mismo. El siguiente nivel técnico no llega leyendo docs en la noche.',
+              },
+              {
+                icon: FileQuestion,
+                title: 'Clientes con scope irreal.',
+                body: '“Quiero un ChatGPT pero para mi empresa.” Traducir eso te toma más que construirlo. Y nadie te paga por traducir.',
+              },
+              {
+                icon: Hourglass,
+                title: 'Ventana de certificación abierta.',
+                body: 'El examen CCA existe hace un mes. Los primeros 200 certificados en hispano van a marcar el mercado. La ventana se está cerrando.',
+              },
+            ].map(({ icon: Icon, title, body }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-white/5 bg-[#141414] p-6 transition hover:border-white/10"
+              >
+                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#F5A05E]/20 bg-[#F5A05E]/5 text-[#F5A05E]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-[family-name:var(--font-jakarta)] text-xl font-bold text-white">
+                  {title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#DDEAEE]/60">
+                  {body}
+                </p>
+              </div>
+            ))}
+          </div>
 
-          <p className="mt-8 text-lg leading-relaxed text-[#DDEAEE]/70 md:text-xl">
-            Nosotros traemos a los clientes.
-            <br />
-            Tú los construyes.
-            <br />
-            <span className="text-[#AAD4AE]">Ambos ganamos.</span>
-          </p>
+          <div className="mt-16 text-center">
+            <p className="font-[family-name:var(--font-jakarta)] text-xl font-semibold leading-snug text-white md:text-2xl">
+              Verymuch.ai no te quita la independencia.
+              <br />
+              <span className="text-[#AAD4AE]">
+                Te da el contexto que te falta.
+              </span>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -128,47 +170,47 @@ export default function HubLandingPage() {
             Qué obtienes como Talento Certificado
           </h2>
           <p className="mt-4 text-lg text-[#DDEAEE]/60">
-            Todo lo que necesitas para construir sin distracciones.
+            Construido para gente que ya construye.
           </p>
         </div>
 
         <div className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
             {
-              icon: Award,
-              title: 'Certificación oficial',
-              body: 'Examen Claude Certified Architect (USD $200) pagado por nosotros. Badge oficial de Anthropic a tu nombre.',
+              icon: Users,
+              title: 'Comunidad técnica seria',
+              body: 'Slack interno con los demás CCAs. Code reviews reales, no Stack Overflow. Edwin y Jorge participan. Llevas cada decisión de arquitectura a gente que ya resolvió lo mismo.',
               accent: 'mint',
             },
             {
-              icon: Briefcase,
-              title: 'Proyectos en producción',
-              body: 'No vendes. Traemos el cliente cerrado, scope acordado, sistemas reales — no pilots que nadie usa.',
+              icon: Award,
+              title: 'Certificación oficial Anthropic',
+              body: 'Examen Claude Certified Architect pagado por nosotros (USD $200). Los 13 cursos de Anthropic Academy incluidos. El badge va a tu nombre, no al nuestro.',
+              accent: 'mint',
+            },
+            {
+              icon: ClipboardCheck,
+              title: 'Proyectos con scope cerrado',
+              body: 'Cuando llega proyecto, llega definido: scope acordado, hitos claros, presupuesto pre-cerrado. No traduces expectativas. No persigues pagos. Construyes lo que vale.',
               accent: 'amber',
             },
             {
-              icon: Coins,
-              title: 'Pago por hitos',
-              body: 'Cobras en cada entrega. Sin "te pago cuando cobre". Verymuch.ai es garante del pago.',
+              icon: ShieldCheck,
+              title: 'Pago por hitos con garante',
+              body: 'Cobramos al cliente por adelantado. Te pagamos por hito entregado. Sin “te pago cuando me pague el cliente”. Pagos por Stripe Connect.',
               accent: 'mint',
             },
             {
-              icon: Globe,
-              title: 'Listing @verymuch.ai',
-              body: 'Apareces en nuestro directorio oficial como arquitecto certificado. Email corporativo @hub.verymuch.ai.',
+              icon: AtSign,
+              title: 'Identidad @hub.verymuch.ai',
+              body: 'Email corporativo y listing en el directorio oficial de arquitectos certificados. Apareces como quien eres.',
               accent: 'ice',
             },
             {
-              icon: BookOpen,
-              title: 'Anthropic Academy',
-              body: 'Acceso a los 13 cursos del programa CCA. Ruta clara: de cero a certificación en 60 días.',
+              icon: Unlock,
+              title: 'Sin exclusividad',
+              body: 'Sigues con tus clientes, tu producto propio, tus otros freelances. Solo pedimos derecho de preferencia cuando haya match de stack y disponibilidad.',
               accent: 'amber',
-            },
-            {
-              icon: Users,
-              title: 'Comunidad interna',
-              body: 'Slack con el resto del equipo y con los founders. Code reviews, war stories, mentoría directa.',
-              accent: 'mint',
             },
           ].map(({ icon: Icon, title, body, accent }) => {
             const accentClasses =
@@ -210,7 +252,7 @@ export default function HubLandingPage() {
               Cómo funciona
             </h2>
             <p className="mt-4 text-lg text-[#DDEAEE]/60">
-              De aplicar a tu primer proyecto en ~10 semanas.
+              De aplicar a estar construyendo con el grupo en ~10 semanas.
             </p>
           </div>
 
@@ -220,19 +262,19 @@ export default function HubLandingPage() {
                 num: '01',
                 title: 'Aplicas',
                 time: '5 minutos',
-                body: 'Llenas el formulario. Nos cuentas tu stack, experiencia con Claude y pretensiones.',
+                body: 'Llenas el formulario. Nos cuentas tu stack, qué has construido con Claude, y qué te frena hoy.',
               },
               {
                 num: '02',
                 title: 'Evaluamos',
                 time: '5 días hábiles',
-                body: 'Revisamos con un rubric técnico. Si hay fit claro, avanzas directo. Si no, te decimos por qué.',
+                body: 'Revisamos con rubric técnico. Si hay fit claro, avanzas directo. Si no hay fit ahora, te decimos qué te falta para el siguiente ciclo.',
               },
               {
                 num: '03',
                 title: 'Entrevista 1:1',
                 time: '30 minutos',
-                body: 'Call con Edwin o Jorge. Alineamos expectativas, timing y tipo de proyectos ideales para ti.',
+                body: 'Call con Edwin o Jorge. Conversamos sobre cómo construyes hoy, qué te frena, y si este entorno encaja contigo.',
               },
               {
                 num: '04',
@@ -244,13 +286,13 @@ export default function HubLandingPage() {
                 num: '05',
                 title: 'Certificación',
                 time: '≤60 días',
-                body: 'Completas los 13 cursos y pasas el examen CCA. Nosotros cubrimos el costo del examen.',
+                body: 'Completas los 13 cursos y pasas el examen CCA. Nosotros cubrimos el costo. Te acompañamos en la preparación — no es examen de librería abierta.',
               },
               {
                 num: '06',
-                title: 'Primer proyecto',
-                time: 'Según pipeline',
-                body: 'Te asignamos a un cliente según tu stack. Scope claro, hitos claros, pago claro.',
+                title: 'Empiezas a construir',
+                time: 'Desde día 60',
+                body: 'Activo en la comunidad, code reviews, canales con founders. Cuando hay proyecto con tu stack, llega con scope cerrado. El valor no espera al primer cliente.',
               },
             ].map(({ num, title, time, body }) => (
               <li
@@ -300,12 +342,13 @@ export default function HubLandingPage() {
             </h3>
             <ul className="space-y-4">
               {[
-                'Eres freelance maduro con experiencia real en Claude API o MCP',
-                'Prefieres construir a vender',
-                'Hablas ES y EN con clientes sin fricción',
-                'Tienes 10-20h/semana cuando hay proyecto',
+                'Ya construyes con Claude API o MCP en producción, no solo tutoriales',
+                'Tienes clientes o producto propio, pero te falta un equipo técnico detrás',
+                'Quieres certificarte oficialmente antes de que la ventana de ser temprano se cierre',
+                'Valoras comunidad técnica seria por encima de más leads',
+                'Hablas ES y EN con fluidez técnica',
                 'Operas desde ES, MX, CO, LATAM o US Hispanic',
-                'Valoras pago confiable sobre "la oportunidad"',
+                'Disponible 10-20 h/semana cuando hay proyecto que encaje',
               ].map((item) => (
                 <li key={item} className="flex gap-3 text-sm text-[#DDEAEE]/80">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#AAD4AE]" />
@@ -321,12 +364,12 @@ export default function HubLandingPage() {
             </h3>
             <ul className="space-y-4">
               {[
-                'Eres junior sin experiencia real en LLMs',
-                'Buscas empleo fijo (esto es freelance)',
-                'Solo quieres el badge sin construir',
-                'Esperas leads exclusivos o sin compartir pipeline',
-                'Nunca has tocado Claude API ni un agente',
-                'Tu lenguaje es de promesas, no de entregas',
+                'No has tocado Claude API ni construido un agente en producción real',
+                'Buscas una plataforma tipo marketplace que te consiga leads',
+                'Esperas proyectos constantes sin que haya match de stack o disponibilidad',
+                'No tienes ancho de banda para code reviews, war stories, o aprender en público',
+                'Solo quieres el badge de CCA para tu LinkedIn, sin construir con nosotros',
+                'Prefieres trabajar aislado sin compartir arquitectura ni decisiones',
               ].map((item) => (
                 <li key={item} className="flex gap-3 text-sm text-[#DDEAEE]/80">
                   <X className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#F5A05E]" />
@@ -409,32 +452,40 @@ export default function HubLandingPage() {
           <div className="mt-16 space-y-3">
             {[
               {
-                q: '¿Cuánto se paga por proyecto?',
-                a: 'Depende del scope y el stack. La tarifa se define por hito y se firma antes de arrancar. Rangos típicos: USD $40-$120/hora efectiva, dependiendo del rol (builder puro vs arquitecto solution). Siempre pago en USD vía Mercury o transferencia local.',
+                q: '¿Por qué no es un marketplace?',
+                a: 'Porque el producto es la certificación y la comunidad técnica — no un board de proyectos. No te vamos a enviar 3 leads a la semana. Cuando hay proyecto que encaja con tu stack, lo ofrecemos al CCA con mejor fit. Si buscas un flujo constante de trabajo garantizado, hay plataformas como Toptal para eso — esto no lo es.',
               },
               {
-                q: '¿Puedo seguir con mis otros clientes?',
-                a: 'Sí. El Acuerdo es no-exclusivo. Lo único que pedimos es derecho de preferencia: si Verymuch.ai tiene un proyecto activo para ti y hay conflicto de horas, prioridad al nuestro mientras dure el compromiso firmado.',
+                q: '¿Qué nivel técnico esperan para pasar el filtro?',
+                a: 'Experiencia real con Claude API o MCP. Puede ser vía N8N llamando a la API, no requerimos ser Python/TypeScript senior. Lo que sí requerimos: que hayas puesto algo en producción — con usuarios reales, no un demo en tu máquina. Si has construido aunque sea un agente funcional que alguien usa, hay base para conversar.',
+              },
+              {
+                q: '¿Cuánta dedicación mensual esperan?',
+                a: 'Mínimo: participación activa en la comunidad (Slack, reviews ocasionales), aún sin proyecto asignado. Los proyectos son opcionales — algunos CCAs están en el grupo por la comunidad y certificación, sin tomar proyectos propios. Si no entras al Slack por 4 semanas seguidas, asumimos que perdiste interés.',
+              },
+              {
+                q: '¿Puedo tener otros clientes o mi propio producto?',
+                a: 'Sí, y de hecho lo preferimos. El Acuerdo es no-exclusivo. Varios del equipo tienen producto propio en paralelo o cartera de clientes fuera de Verymuch.ai. Solo pedimos derecho de preferencia: cuando tenemos un proyecto activo contigo y hay conflicto de horas, prioridad al nuestro mientras dure el compromiso firmado.',
+              },
+              {
+                q: '¿Qué stack trabajamos y desde dónde?',
+                a: 'Claude API, MCP, Claude Code, Anthropic SDK, N8N, Supabase, Next.js, Python. Proyectos de IA aplicada a sales, marketing, operaciones y soporte en empresas de mercado medio. Priorizamos ES, MX, CO y países de habla hispana. Lo que realmente importa: horarios compatibles con clientes de LATAM/ES y comunicación fluida en ES + EN.',
+              },
+              {
+                q: '¿Y si no llega proyecto rápido?',
+                a: 'El valor del programa no depende del pipeline. Entras a la comunidad, completas la certificación, haces reviews con otros CCAs, accedes a canales con founders. Si en 4-8 semanas post-certificación no ha aparecido un match, quedas en la lista de preferencia del siguiente cliente que cierre. Mientras, construyes y aprendes.',
+              },
+              {
+                q: '¿Cuánto se paga por proyecto?',
+                a: 'Depende del scope y el stack. La tarifa se define por hito y se firma antes de arrancar. Rangos típicos: USD $40-$120/hora efectiva, según el rol (builder vs. arquitecto solution). Pago en USD vía Mercury o transferencia local. Verymuch.ai cobra al cliente por adelantado y libera por hito entregado.',
               },
               {
                 q: '¿Qué pasa si no paso el examen CCA?',
-                a: 'Tienes una segunda oportunidad sin costo para ti. Si en el segundo intento tampoco pasas, salimos del programa sin penalización ni deuda. El examen es desafiante pero con los 13 cursos completos, la tasa de aprobación es alta.',
-              },
-              {
-                q: '¿Qué tecnologías trabajamos?',
-                a: 'Claude API, MCP (Model Context Protocol), Claude Code, Anthropic SDK, N8N, Supabase, Next.js, Python. Todos nuestros proyectos tocan IA aplicada a sales, marketing, operaciones y soporte para empresas de mercado medio.',
-              },
-              {
-                q: '¿Desde qué país puedo aplicar?',
-                a: 'Priorizamos España, México, Colombia y países de habla hispana. También aceptamos talento bilingüe en US. El criterio real no es geográfico — es que puedas trabajar en horarios compatibles con clientes de LATAM/ES y comunicar en español e inglés.',
-              },
-              {
-                q: '¿Cuándo llega el primer proyecto?',
-                a: 'Depende del pipeline activo y tu stack. Nuestra meta es que cada Talento Certificado entre a un proyecto en las 4-8 semanas post-certificación. Si el match no llega en ese plazo, te incluimos en la lista de preferencia del siguiente cliente que cierre.',
+                a: 'Segunda oportunidad sin costo. Si en el segundo intento tampoco pasa, sales del programa sin penalización ni deuda. El examen es desafiante, pero con los 13 cursos completos y preparación guiada por el equipo, la tasa de aprobación es alta.',
               },
               {
                 q: '¿Qué tan serio es esto?',
-                a: 'La meta de Verymuch.ai es tener 10+ arquitectos certificados bajo nuestro dominio para mediados de 2026, como condición para ser Claude Partner oficial de Anthropic. Esto no es un side-project nuestro — es infraestructura core del negocio.',
+                a: 'La meta es tener 10+ CCAs bajo verymuch.ai para mediados de 2026, como condición para ser Claude Partner oficial de Anthropic. No es un side-project. Es infraestructura core del negocio. Los founders leen cada aplicación. Los founders entrevistan. Los founders están en el Slack.',
               },
             ].map(({ q, a }) => (
               <details
@@ -479,14 +530,13 @@ export default function HubLandingPage() {
 
           <div className="relative">
             <h2 className="font-[family-name:var(--font-jakarta)] text-4xl font-extrabold leading-tight text-white md:text-5xl">
-              ¿Listo para dejar de vender
-              <br />
-              y empezar a{' '}
-              <span className="text-[#AAD4AE]">construir</span>?
+              Deja de construir{' '}
+              <span className="text-[#AAD4AE]">solo</span>.
             </h2>
             <p className="mx-auto mt-6 max-w-xl text-lg text-[#DDEAEE]/70">
-              5 minutos para aplicar. Respuesta en 5 días hábiles.
-              Si hay fit, arrancamos.
+              Certifícate con Anthropic. Entra a la comunidad. Trabaja con
+              proyectos de scope cerrado cuando haya match. 5 minutos para
+              aplicar. Respuesta en 5 días hábiles.
             </p>
             <div className="mt-10">
               <Link
