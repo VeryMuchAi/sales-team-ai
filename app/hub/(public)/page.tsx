@@ -102,7 +102,7 @@ export default function HubLandingPage() {
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/hub/apply"
-                className="group inline-flex items-center gap-2 rounded-[10px] border border-white/[0.14] bg-[linear-gradient(90deg,rgba(172,237,235,0.12)_0%,rgba(188,218,199,0.12)_35%,rgba(215,204,160,0.12)_65%,rgba(218,184,130,0.12)_100%)] px-7 py-3.5 text-sm font-semibold text-[#F0EEE8] transition-all duration-200 hover:bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] hover:text-[#151514]"
+                className="group inline-flex items-center gap-2 rounded-[10px] border border-white/[0.14] bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] px-7 py-3.5 text-sm font-semibold text-[#151514] transition-all duration-200 hover:opacity-90"
               >
                 Aplicar al programa
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -611,7 +611,7 @@ export default function HubLandingPage() {
             <div className="mt-10">
               <Link
                 href="/hub/apply"
-                className="group inline-flex items-center gap-2 rounded-[10px] border border-white/[0.14] bg-[linear-gradient(90deg,rgba(172,237,235,0.12)_0%,rgba(188,218,199,0.12)_35%,rgba(215,204,160,0.12)_65%,rgba(218,184,130,0.12)_100%)] px-8 py-4 text-base font-semibold text-[#F0EEE8] transition-all duration-200 hover:bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] hover:text-[#151514]"
+                className="group inline-flex items-center gap-2 rounded-[10px] border border-white/[0.14] bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] px-8 py-4 text-base font-semibold text-[#151514] transition-all duration-200 hover:opacity-90"
               >
                 Aplicar al programa
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
