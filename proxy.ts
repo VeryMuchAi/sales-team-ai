@@ -3,20 +3,25 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { isEmailWhitelisted } from '@/lib/auth/whitelist';
 
 /**
- * Host-based routing: cuando el visitante llega por `hub.verymuch.ai` a la
- * raíz, redirigimos a `/hub` (la landing del talento) para que sea lo
- * primero que ven. En el dominio principal, `/` sigue mostrando Sales
- * Intelligence.
+ * Host-based routing para hub.verymuch.ai:
+ * Reescribe internamente hub.verymuch.ai/* → /hub/* sin cambiar la URL visible.
+ * Así hub.verymuch.ai/ muestra la landing y hub.verymuch.ai/apply el formulario,
+ * sin el doble /hub en la barra de direcciones.
  */
 const HUB_HOST = 'hub.verymuch.ai';
 
 export async function proxy(request: NextRequest) {
-  // Redirect: hub.verymuch.ai/ → hub.verymuch.ai/hub
   const host = request.headers.get('host') ?? '';
-  if (host === HUB_HOST && request.nextUrl.pathname === '/') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/hub';
-    return NextResponse.redirect(url);
+
+  // Rewrite interno: hub.verymuch.ai/* → /hub/* (URL visible no cambia)
+  if (host === HUB_HOST) {
+    const pathname = request.nextUrl.pathname;
+    // Evitar doble-rewrite si ya viene con /hub (no debería ocurrir externamente)
+    if (!pathname.startsWith('/hub')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/hub' + (pathname === '/' ? '' : pathname);
+      return NextResponse.rewrite(url);
+    }
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -83,7 +88,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // `/` para el redirect host-based hub.verymuch.ai → /hub
-  // El resto son los matchers originales de auth (dashboard, login, signup)
-  matcher: ['/', '/dashboard/:path*', '/login', '/signup'],
+  matcher: [
+    // Cubre todos los paths excepto assets estáticos y rutas internas de Next.js
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 };
