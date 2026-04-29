@@ -13,10 +13,18 @@ const HUB_HOST = 'hub.verymuch.ai';
 export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? '';
 
-  // Rewrite interno: hub.verymuch.ai/* → /hub/* (URL visible no cambia)
+  // Host-based routing: hub.verymuch.ai
   if (host === HUB_HOST) {
     const pathname = request.nextUrl.pathname;
-    // Evitar doble-rewrite si ya viene con /hub (no debería ocurrir externamente)
+
+    // Si alguien llega directamente a hub.verymuch.ai/hub → redirigir a / (URL limpia)
+    if (pathname === '/hub' || pathname === '/hub/') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    // Rewrite interno: hub.verymuch.ai/* → /hub/* (URL visible no cambia)
     if (!pathname.startsWith('/hub')) {
       const url = request.nextUrl.clone();
       url.pathname = '/hub' + (pathname === '/' ? '' : pathname);
