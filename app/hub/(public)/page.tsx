@@ -70,9 +70,7 @@ export default function HubLandingPage() {
 
             {/* Headline — Inter 800 · 1 palabra en gradient firma */}
             <h1 className="font-[family-name:var(--font-inter)] text-5xl font-extrabold leading-[1.05] tracking-[-0.045em] text-[#F0EEE8] md:text-7xl">
-              Construir solo
-              <br />
-              tiene{' '}
+              Certifícate en{' '}
               <span
                 className="bg-clip-text text-transparent"
                 style={{
@@ -80,7 +78,18 @@ export default function HubLandingPage() {
                     'linear-gradient(90deg, #ACEDEB 0%, #BCDAC7 35%, #D7CCA0 65%, #DAB882 100%)',
                 }}
               >
-                techo.
+                Claude
+              </span>
+              <br />
+              con Verymuch.
+              <span
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(90deg, #ACEDEB 0%, #BCDAC7 35%, #D7CCA0 65%, #DAB882 100%)',
+                }}
+              >
+                Ai
               </span>
             </h1>
 
