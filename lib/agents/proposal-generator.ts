@@ -2,10 +2,17 @@ import { anthropic, MODEL } from '@/lib/ai/anthropic';
 import { KB_PROPOSAL } from '@/lib/knowledge-base/verymuch-context';
 import { additionalContextBlock } from '@/lib/knowledge-base/additional-context';
 import { salesInteractionNotesBlock } from '@/lib/knowledge-base/sales-interaction-notes';
-import type { ProposalGeneratorInput } from './types';
+import type { ProposalGeneratorInput, ProposalCurrency } from './types';
 import { textFromMessage } from './utils';
 
 const MAX_TOKENS = 8000;
+
+const CURRENCY_LABELS: Record<ProposalCurrency, string> = {
+  USD: 'USD ($) — dólares estadounidenses',
+  EUR: 'EUR (€) — euros',
+  MXN: 'MXN ($) — pesos mexicanos',
+  COP: 'COP ($) — pesos colombianos',
+};
 
 const SYSTEM = `
 ${KB_PROPOSAL}
@@ -17,6 +24,15 @@ Si el mensaje de usuario incluye la sección "Contexto adicional proporcionado p
 
 ## Notas de interacción (objeciones, comentarios, aprendizajes)
 Si aparece "Notas del equipo sobre la relación comercial", úsalas para personalizar la propuesta (objeciones a despejar, contexto no reflejado solo en el análisis de llamada, aprendizajes).
+
+## Moneda
+Cuando se especifique una moneda de salida, TODOS los precios, rangos y ejemplos de inversión deben expresarse en esa moneda. Usa el símbolo correcto y el código ISO (p.ej. €1.500 EUR, $1.500 USD, $18.000 MXN, $6.000.000 COP). No mezcles monedas.
+
+## Mejoras solicitadas
+Si el mensaje incluye la sección "Mejoras solicitadas por el equipo", aplícalas con precisión sin perder coherencia ni personalización.
+
+## Aprendizajes de versiones anteriores
+Si el mensaje incluye "Aprendizajes de versiones anteriores", tenlos en cuenta para no repetir los mismos errores y mejorar el tono, estructura o contenido.
 
 ## ESTRUCTURA OBLIGATORIA DE LA PROPUESTA
 La propuesta sigue exactamente la estructura de nuestra presentación comercial de referencia (7 secciones = 7 slides). Genera cada sección en el orden indicado con el formato exacto.
@@ -160,12 +176,19 @@ Edwin Moreno (COO) — edwin@verymuch.ai  |  Jorge Herrera (CEO) — jorge@verym
 
 export async function runProposalGenerator(input: ProposalGeneratorInput): Promise<string> {
   const lang = input.language === 'en' ? 'en' : 'es';
+  const currency = input.currency ?? 'USD';
   const extra = additionalContextBlock(input.additional_context);
   const salesNotes = salesInteractionNotesBlock(input.sales_interaction_notes);
   const today = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const feedbackBlock = input.improvement_feedback
+    ? `\n## Mejoras solicitadas por el equipo\n${input.improvement_feedback}\n`
+    : '';
+
   const userPrompt = `
 **Fecha actual:** ${today}
 **Idioma de salida:** ${lang === 'en' ? 'English' : 'Español'}
+**Moneda de salida:** ${CURRENCY_LABELS[currency]}
 
 **Empresa:** ${input.company_name}
 ${input.contact_name ? `- Contacto principal: ${input.contact_name}` : ''}
@@ -180,6 +203,7 @@ ${input.pre_call_brief}
 ${input.call_analysis}
 ${extra ? `\n${extra}\n` : ''}
 ${salesNotes ? `\n${salesNotes}\n` : ''}
+${feedbackBlock}
 
 Redacta la propuesta comercial completa.
 `.trim();
