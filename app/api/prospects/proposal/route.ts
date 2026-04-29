@@ -112,6 +112,11 @@ export async function POST(req: NextRequest) {
       await supabase.from('agent_results').update({ outreach_output: proposal }).eq('id', latestAr.id);
     }
 
+    // Fire-and-forget push to GHL so the proposal lands in the contact card.
+    import('@/lib/integrations/ghl-trigger')
+      .then((m) => m.triggerGhlPush(prospect_id))
+      .catch((e) => console.warn('ghl push trigger load failed', e));
+
     return NextResponse.json({
       success: true,
       proposal,
