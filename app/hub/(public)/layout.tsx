@@ -9,9 +9,9 @@ import type { Metadata } from 'next';
  * mapea a app/hub/(public)/apply/page.tsx.
  */
 export const metadata: Metadata = {
-  title: 'Verymuch.ai Hub · Claude Certified Architect Program',
+  title: 'Verymuch.ai Hub · Claude Certified Architect Foundations (CCAF)',
   description:
-    'Programa Claude Certified Architect bajo Verymuch.ai. Comunidad de builders, certificación oficial y proyectos con scope cerrado. Construye con un equipo detrás.',
+    'Verymuch.ai inicia el camino al Claude Partner Network. Necesitamos 10 builders CCAF certificados. Comunidad técnica, 4 cursos del CPN Learning Path y proyectos con scope cerrado.',
 };
 
 export default function HubPublicLayout({
@@ -20,6 +20,6 @@ export default function HubPublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-[#DDEAEE]">{children}</div>
+    <div className="min-h-screen bg-[#151514] text-[#F0EEE8]">{children}</div>
   );
 }
