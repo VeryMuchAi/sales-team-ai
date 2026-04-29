@@ -32,7 +32,7 @@ export function HubNav() {
           </a>
           <Link
             href="/hub/apply"
-            className="rounded-[10px] border border-white/[0.14] bg-[linear-gradient(90deg,rgba(172,237,235,0.12)_0%,rgba(188,218,199,0.12)_35%,rgba(215,204,160,0.12)_65%,rgba(218,184,130,0.12)_100%)] px-5 py-2 text-sm font-semibold text-[#F0EEE8] transition-all duration-200 hover:bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] hover:text-[#151514]"
+            className="rounded-[10px] bg-[linear-gradient(90deg,#ACEDEB_0%,#BCDAC7_35%,#D7CCA0_65%,#DAB882_100%)] px-5 py-2 text-sm font-semibold text-[#151514] transition-all duration-200 hover:opacity-90"
           >
             Aplicar
           </Link>
