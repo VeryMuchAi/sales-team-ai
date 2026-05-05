@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, DM_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+// Fonts del dashboard interno (legacy, mantener)
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
@@ -13,6 +14,19 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["400", "500", "700"],
+});
+
+// Fonts del brand book Verymuch.ai (Hub público + futuras superficies)
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 /** Favicon: archivo `app/favicon.ico` (lo detecta Next.js automáticamente). */
@@ -29,7 +43,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${jakarta.variable} ${dmSans.variable} font-sans antialiased`}>
+      <body
+        className={`${jakarta.variable} ${dmSans.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+      >
         {children}
         <Toaster richColors position="top-right" />
       </body>
