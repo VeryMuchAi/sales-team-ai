@@ -8,6 +8,7 @@ import {
   Target,
   Settings,
   Sparkles,
+  Phone,
   GraduationCap,
   LineChart,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import { Logo } from './Logo';
 const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/prospectos', label: 'Prospectos AI', icon: Sparkles },
+  { href: '/dashboard/call-intelligence', label: 'Call Intelligence', icon: Phone },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
   { href: '/dashboard/icp', label: 'ICP', icon: Target },
   { href: '/dashboard/settings', label: 'Configuración', icon: Settings },

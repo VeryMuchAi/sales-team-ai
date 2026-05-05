@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Target, Settings, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Users, Target, Settings, Sparkles, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/prospectos', label: 'Prospectos AI', icon: Sparkles },
+  { href: '/dashboard/call-intelligence', label: 'Call Intelligence', icon: Phone },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
   { href: '/dashboard/icp', label: 'ICP', icon: Target },
   { href: '/dashboard/settings', label: 'Configuración', icon: Settings },
